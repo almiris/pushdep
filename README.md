@@ -1,7 +1,16 @@
-# Awesome Project Build with TypeORM
+# PushDep
 
-Steps to run this project:
+A concurrent executor for hierarchical tasks built with TypeScript and targeting Node JS. It can also be used as a simple message queue.
 
-1. Run `npm i` command
-2. Setup database settings inside `data-source.ts` file
-3. Run `npm start` command
+The library targets small to mid size projects that may not want to use a database, or a distributed in-memory cache. Nevertheless, it works well with a typeORM supported database.
+
+Concurrency is set at the tasks level and at the workers level.
+
+Usage: 
+
+Available implementations:
+1. In-memory
+2. TypeORM
+
+Deployment examples:
+
