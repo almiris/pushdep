@@ -63,4 +63,17 @@ worker:
   set executable jobs to max executable
 
 
-  
+## Todo
+- cyclic redondancy check, needed ? => no, user's responsibility
+- child -> parent relationship, or isRoot (or hasParent) on task could help clean tasks for
+in memory storage; or TTL, or parent counter (to supported multiple unrelated parents)
+- when popping a task, the dependencies results are not sent automatically. it is the worker responsibility to call getDependenciesResults()
+- implement shared task store : sql database, redis...
+- implement bindings in other programming languages
+- re-pushing tasks may lead to have orphin tasks - should we check that or do we leave the responsability to the user?
+- move priority to taskExecution to make it invariant unless task is repushed
+
+## Notes
+- If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
+- task lifecycle: pending -> active -> (pending | completed | canceled | failed). A task cannot be recurrent. For recurring task, re-push the task periodically (with the historical data as args when needed)
+

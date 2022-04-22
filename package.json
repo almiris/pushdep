@@ -5,7 +5,7 @@
    "scripts": {
       "start": "ts-node src/index.ts",
       "typeorm": "typeorm-ts-node-commonjs",
-      "build": "nest build",
+      "build": "tsc",
       "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
       "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
       "test": "jest",
