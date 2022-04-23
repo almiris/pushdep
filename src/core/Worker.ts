@@ -6,7 +6,7 @@ const sleep = promisify(setTimeout);
 
 export class PushDepWorkerOptions {
     kind: string;
-    idleTimeoutMs: number = 200;
+    idleTimeoutMs = 200;
 }
 
 export type PushDepWorkerFunction = (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => Promise<void>;

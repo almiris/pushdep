@@ -26,8 +26,6 @@ class InMemoryTasks {
     failedTasks: TasksMappedByPriority = {};
     allTasks: TasksMappedById = {};
 
-    constructor() {}
-
     setKind(kind: PushDepKind): void {
         this.kinds[kind.kind] = kind;
     }
@@ -101,14 +99,14 @@ class InMemoryTasks {
         return task?.task || null;
     }
 
-    findByKind(kind: string, tasks: TasksMappedByPriority, pop: boolean = false): PushDepTaskExecution {
+    findByKind(kind: string, tasks: TasksMappedByPriority, pop = false): PushDepTaskExecution {
         const keys = Object.keys(this.pendingTasks);
         if (keys.length !== 0) {
             const prioritiesDesc = keys.map(p => Number(p)).sort((a, b) => b - a);
-            for (let priority of prioritiesDesc) {
+            for (const priority of prioritiesDesc) {
                 const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kind];
                 if (tasksForPriorityAndKind) {
-                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution, i: number) => !taskExecution.task.dependencyIds 
+                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencyIds 
                     || taskExecution.task.dependencyIds.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
                     if (index !== -1) {
                         const task = tasksForPriorityAndKind[index];
@@ -201,7 +199,7 @@ class InMemoryTasks {
                 break;
             default:
                 throw new Error(`Incorrect task state: ${state}`);
-        };
+        }
     }
 }
 
