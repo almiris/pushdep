@@ -1,5 +1,4 @@
 import { InMemoryPushDep } from "src/core/InMemoryPushDep";
-import { PushDepTask } from "./PushDep";
 
 describe('InMemoryPushDep tests', () => {
 
@@ -79,6 +78,13 @@ describe('InMemoryPushDep tests', () => {
 
     let task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id0);
+    expect.assertions(1);
+  });
+
+  it('It should pop nothing', async () => {
+    const pushDep = new InMemoryPushDep();
+    const task = await pushDep.popAsync("a");
+    expect(task).toBeNull();
     expect.assertions(1);
   });
 
