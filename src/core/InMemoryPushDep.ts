@@ -84,7 +84,7 @@ class InMemoryTasks {
     }
 
     peek(kind: string): PushDepTask {
-        return this.findByKind(kind, this.pendingTasks, false).task;
+        return this.findByKind(kind, this.pendingTasks, false)?.task || null;
     }
 
     /**
@@ -98,7 +98,7 @@ class InMemoryTasks {
         if (task) {
             delete this.allTasks[task.task.id];
         }
-        return task.task;
+        return task?.task || null;
     }
 
     findByKind(kind: string, tasks: TasksMappedByPriority, pop: boolean = false): PushDepTaskExecution {
@@ -107,14 +107,16 @@ class InMemoryTasks {
             const prioritiesDesc = keys.map(p => Number(p)).sort((a, b) => b - a);
             for (let priority of prioritiesDesc) {
                 const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kind];
-                const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution, i: number) => !taskExecution.task.dependencyIds 
-                || taskExecution.task.dependencyIds.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
-                if (index !== -1) {
-                    const task = tasksForPriorityAndKind[index];
-                    if (pop) {
-                        tasksForPriorityAndKind.splice(index, 1);
+                if (tasksForPriorityAndKind) {
+                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution, i: number) => !taskExecution.task.dependencyIds 
+                    || taskExecution.task.dependencyIds.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
+                    if (index !== -1) {
+                        const task = tasksForPriorityAndKind[index];
+                        if (pop) {
+                            tasksForPriorityAndKind.splice(index, 1);
+                        }
+                        return task;
                     }
-                    return task;
                 }
             }
         }
@@ -127,7 +129,7 @@ class InMemoryTasks {
             return null;
         }
 
-        const task = this.findByKind(kind, this.pendingTasks, true).task;
+        const task = this.findByKind(kind, this.pendingTasks, true)?.task || null;
         if (task) {
             this.changeTaskState(task, PushDepExecutionState.active);
         }
