@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "./pushdep";
+import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "./PushDep";
 
 type KindsMappedByKind = { 
     [kind: string]: PushDepKind
