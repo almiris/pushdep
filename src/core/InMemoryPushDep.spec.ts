@@ -2,8 +2,7 @@ import { InMemoryPushDep } from "src/core/InMemoryPushDep";
 
 describe('InMemoryPushDep tests', () => {
 
-  beforeEach(async () => {
-  });
+  // beforeEach(async () => {});
 
   it('It should push a task assigning it its id when necessary', async () => {
     const pushDep = new InMemoryPushDep();
@@ -74,9 +73,9 @@ describe('InMemoryPushDep tests', () => {
     const pushDep = new InMemoryPushDep();
     const id0 = await pushDep.pushAsync({ kind: "a" });
     const id2 = await pushDep.pushAsync({ kind: "a", priority: 2, dependencyIds: [id0]});
-    const id10 = await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
+    await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
 
-    let task = await pushDep.peekAsync("a");
+    const task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id0);
     expect.assertions(1);
   });
@@ -114,7 +113,7 @@ describe('InMemoryPushDep tests', () => {
       kind: "a"
     });
 
-    let task = await pushDep.startAsync("a");
+    const task = await pushDep.startAsync("a");
 
     let count = await pushDep.countAsync("a");
     expect(count).toEqual({
@@ -147,7 +146,7 @@ describe('InMemoryPushDep tests', () => {
       kind: "a"
     });
 
-    let task = await pushDep.startAsync("a");
+    const task = await pushDep.startAsync("a");
 
     let count = await pushDep.countAsync("a");
     expect(count).toEqual({
@@ -180,7 +179,7 @@ describe('InMemoryPushDep tests', () => {
       kind: "a"
     });
 
-    let task = await pushDep.startAsync("a");
+    const task = await pushDep.startAsync("a");
 
     let count = await pushDep.countAsync("a");
     expect(count).toEqual({
@@ -213,7 +212,7 @@ describe('InMemoryPushDep tests', () => {
       kind: "a"
     });
 
-    let task = await pushDep.startAsync("a");
+    const task = await pushDep.startAsync("a");
 
     let count = await pushDep.countAsync("a");
     expect(count).toEqual({
@@ -246,7 +245,7 @@ describe('InMemoryPushDep tests', () => {
       kind: "a"
     });
 
-    let task = await pushDep.popAsync("a");
+    const task = await pushDep.popAsync("a");
     await pushDep.pushAsync(task);
 
     const count = await pushDep.countAsync("a");
@@ -265,7 +264,8 @@ describe('InMemoryPushDep tests', () => {
   it('It should test kind concurrency', async () => {
     let pushDep = new InMemoryPushDep();
     
-    for (let i in [1, 2, 3, 4]) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for (const i in [1, 2, 3, 4]) {
       await pushDep.pushAsync({ kind: "a" });
       await pushDep.startAsync("a");
     }
@@ -283,7 +283,8 @@ describe('InMemoryPushDep tests', () => {
     pushDep = new InMemoryPushDep();
     pushDep.setKindAsync({ kind: "a", concurrency: 3 });
 
-    for (let i in [1, 2, 3, 4]) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for (const i in [1, 2, 3, 4]) {
       await pushDep.pushAsync({ kind: "a" });
       await pushDep.startAsync("a");
     }

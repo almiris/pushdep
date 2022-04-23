@@ -7,8 +7,7 @@ const sleep = promisify(setTimeout);
 
 describe('Worker tests', () => {
 
-  beforeEach(async () => {
-  });
+  // beforeEach(async () => {});
 
   it('It should work ;-)', async () => {
     const pushDep = new InMemoryPushDep();
@@ -37,7 +36,7 @@ describe('Worker tests', () => {
 
     await sleep(1000);
 
-    let count = await pushDep.countAsync("a");
+    const count = await pushDep.countAsync("a");
     expect(count).toEqual({
       pending: 0,
       active: 0,
@@ -117,4 +116,36 @@ describe('Worker tests', () => {
 
     expect.assertions(2);
   }, 10000);
+
+  it('It should execute a simple dummy demo', async () => {
+    const pushDep = new InMemoryPushDep();
+    
+    const executionPath = [];
+
+    const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+      executionPath.push(task.id);
+      await pushDep.completeAsync(task);
+    };
+
+    const workerFoo = new PushDepWorker(pushDep, { kind: "foo", idleTimeoutMs: 100 }, workerFunction);
+    workerFoo.startAsync();
+
+    const workerBar = new PushDepWorker(pushDep, { kind: "bar", idleTimeoutMs: 100 }, workerFunction);
+    workerBar.startAsync();
+
+    await pushDep.pushAsync({ kind: "foo", id: "1" });
+    await pushDep.pushAsync({ kind: "foo", id: "2" });
+    await pushDep.pushAsync({ kind: "foo", id: "3" });
+    await pushDep.pushAsync({ kind: "bar", id: "4", dependencyIds: ["1", "2"] });
+    await pushDep.pushAsync({ kind: "bar", id: "5", dependencyIds: ["1", "3"]});
+    await pushDep.pushAsync({ kind: "foo", id: "6", dependencyIds: ["4", "5"] });
+
+    await sleep(1000);
+
+    await workerFoo.stopAsync();
+    await workerBar.stopAsync();
+
+    expect(executionPath.join("")).toBe("123456");
+    expect.assertions(1);
+  });
 });
