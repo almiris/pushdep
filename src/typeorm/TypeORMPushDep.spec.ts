@@ -1,40 +1,74 @@
-import { InMemoryPushDep } from "src/core/InMemoryPushDep";
+import "dotenv/config";
+import { DataSource } from "typeorm"
+import { TypeORMPushDep } from "src/typeorm/TypeORMPushDep";
+import { Kind } from "./Kind.entity";
 
-describe('InMemoryPushDep tests', () => {
+let dataSource: DataSource;
+
+describe('TypeORMPushDep tests', () => {
+
+  beforeAll(async() => {
+    dataSource = new DataSource({
+      type: process.env.DB_TYPE as any,
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
+      extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
+      synchronize: true,
+      logging: true,
+      entities: [Kind],
+      migrations: [],
+      subscribers: [],
+    });
+    await dataSource.initialize();
+  });
+
+  afterAll(async() => {
+    await dataSource.destroy();
+  });
 
   // beforeEach(async () => {});
-
+  
   it('It should write and read a kind', async() => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep(dataSource);
     await pushDep.setKindAsync({ name: "a", concurrency: 3 });
-    const kind = await pushDep.getKindAsync("a");
-    expect(kind).not.toBeNull();
-    expect(kind).toEqual({
-      kind: "a",
+
+    const kindA = await pushDep.getKindAsync("a");
+    expect(kindA).not.toBeNull();
+    expect(kindA).toEqual({
+      name: "a",
       concurrency: 3
     });
-    expect.assertions(2);
+
+    const kindB = await pushDep.getKindAsync("b");
+    expect(kindB).toBeNull();
+
+    expect.assertions(3);
   });
 
-  it('It should push a task assigning it its id when necessary', async () => {
-    const pushDep = new InMemoryPushDep();
-    const id = await pushDep.pushAsync({
-      id: "my_id",
-      kind: "a"
-    });
-    const newId = await pushDep.pushAsync({
-      kind: "a"
-    });
+  // it('It should push a task assigning it its id when necessary', async () => {
+  //   const pushDep = new TypeORMPushDep();
+  //   const id = await pushDep.pushAsync({
+  //     id: "my_id",
+  //     kind: "a"
+  //   });
+  //   const newId = await pushDep.pushAsync({
+  //     kind: "a"
+  //   });
 
-    expect(id).toBe("my_id");
-    expect(newId).not.toBeNull();
-    expect(newId.length).toBe(36);
-    expect((await pushDep.countAsync("a")).pending).toBe(2);
-    expect.assertions(4);
-  });
+  //   expect(id).toBe("my_id");
+  //   expect(newId).not.toBeNull();
+  //   expect(newId.length).toBe(36);
+  //   expect((await pushDep.countAsync("a")).pending).toBe(2);
+  //   expect.assertions(4);
+  // });
 
+  /*
   it('It should count tasks', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
 
     await pushDep.pushAsync({ kind: "a" });
     await pushDep.pushAsync({ kind: "a" });
@@ -64,7 +98,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should peek a task using priority', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     const id0 = await pushDep.pushAsync({ kind: "a" });
 
     let task = await pushDep.peekAsync("a");
@@ -82,7 +116,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should peek a task using priority and dependencies', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     const id0 = await pushDep.pushAsync({ kind: "a" });
     const id2 = await pushDep.pushAsync({ kind: "a", priority: 2, dependencyIds: [id0]});
     await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
@@ -93,14 +127,14 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should pop nothing', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     const task = await pushDep.popAsync("a");
     expect(task).toBeNull();
     expect.assertions(1);
   });
 
   it('It should pop tasks', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     const id0 = await pushDep.pushAsync({ kind: "a" });
     const id2 = await pushDep.pushAsync({ kind: "a", priority: 2, dependencyIds: [id0]});
     const id10 = await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
@@ -120,7 +154,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should start then complete a task', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     await pushDep.pushAsync({
       kind: "a"
     });
@@ -153,7 +187,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should start then cancel a task', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     await pushDep.pushAsync({
       kind: "a"
     });
@@ -186,7 +220,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should start then fail a task', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     await pushDep.pushAsync({
       kind: "a"
     });
@@ -219,7 +253,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should start then repush a task', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     await pushDep.pushAsync({
       kind: "a"
     });
@@ -252,7 +286,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should repush a pending task', async () => {
-    const pushDep = new InMemoryPushDep();
+    const pushDep = new TypeORMPushDep();
     await pushDep.pushAsync({
       kind: "a"
     });
@@ -274,7 +308,7 @@ describe('InMemoryPushDep tests', () => {
   });
 
   it('It should test kind concurrency', async () => {
-    let pushDep = new InMemoryPushDep();
+    let pushDep = new TypeORMPushDep();
     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const i in [1, 2, 3, 4]) {
@@ -292,8 +326,8 @@ describe('InMemoryPushDep tests', () => {
       all: 4
     });
 
-    pushDep = new InMemoryPushDep();
-    pushDep.setKindAsync({ name: "a", concurrency: 3 });
+    pushDep = new TypeORMPushDep();
+    await pushDep.setKindAsync({ kind: "a", concurrency: 3 });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const i in [1, 2, 3, 4]) {
@@ -313,5 +347,5 @@ describe('InMemoryPushDep tests', () => {
 
     expect.assertions(2);
   });
-
+  */
 });

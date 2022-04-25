@@ -1,11 +1,12 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity()
-export class User {
+export class TaskExecution {
 
     @PrimaryGeneratedColumn()
     id: number
 
+    /*
     @Column()
     firstName: string
 
@@ -14,5 +15,5 @@ export class User {
 
     @Column()
     age: number
-
+    */
 }
