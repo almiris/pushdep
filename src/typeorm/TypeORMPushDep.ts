@@ -1,5 +1,8 @@
+import "reflect-metadata";
+import { DataSource, Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
-import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "./PushDep";
+import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "../core/PushDep";
+import { Kind } from "./Kind.entity";
 
 type KindsMappedByKind = { 
     [kind: string]: PushDepKind
@@ -17,7 +20,7 @@ type TasksMappedById = {
     [id: string]: PushDepTaskExecution 
 }
 
-class InMemoryTasks {
+class TypeORMTasks {
     kinds: KindsMappedByKind = {};
     pendingTasks: TasksMappedByPriority = {};
     activeTasks: TasksMappedByPriority = {};
@@ -26,12 +29,26 @@ class InMemoryTasks {
     failedTasks: TasksMappedByPriority = {};
     allTasks: TasksMappedById = {};
 
-    setKind(kind: PushDepKind): void {
-        this.kinds[kind.name] = kind;
+    kindRepository: Repository<Kind>;
+
+    constructor(private dataSource: DataSource) {
+        this.kindRepository = dataSource.getRepository(Kind);
+    }
+    
+    async setKind(kind: PushDepKind): Promise<void> {
+        await this.kindRepository.save(kind);
     }
 
-    getKind(kind: string): PushDepKind {
-        return this.kinds[kind] || null;
+    async getKind(kind: string): Promise<PushDepKind> {
+        return (await this.kindRepository.find({
+            select: {
+                name: true,
+                concurrency : true
+            },
+            where: {
+                name: kind
+            }
+        }))[0] || null;
     }
     
     push(task: PushDepTask): void {
@@ -207,15 +224,19 @@ class InMemoryTasks {
     }
 }
 
-export class InMemoryPushDep implements PushDep {
-    tasks: InMemoryTasks = new InMemoryTasks();
+export class TypeORMPushDep implements PushDep {
+    tasks: TypeORMTasks;
+
+    constructor(private dataSource: DataSource) {
+        this.tasks = new TypeORMTasks(dataSource);
+    }
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        this.tasks.setKind(kind);
+        await this.tasks.setKind(kind);
     }
 
     async getKindAsync(kind: string): Promise<PushDepKind> {
-        return this.tasks.getKind(kind);
+        return await this.tasks.getKind(kind);
     }
 
     async pushAsync(task: PushDepTask): Promise<string> {

@@ -72,8 +72,11 @@ in memory storage; or TTL, or parent counter (to supported multiple unrelated pa
 - implement bindings in other programming languages
 - re-pushing tasks may lead to have orphin tasks - should we check that or do we leave the responsability to the user?
 - move priority to taskExecution to make it invariant unless task is repushed
+- auto deletion of completed as soon as it is completed, using a TTL. TTL = 0 auto deletion, TTL > 0 will be deleted from time to time (depending on the number of tasks in the system or some periodicity), TTL = -1 keep the task => cleaning will be realized by a worker or an external system using the pushdep directly
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
 - task lifecycle: pending -> active -> (pending | completed | canceled | failed). A task cannot be recurrent. For recurring task, re-push the task periodically (with the historical data as args when needed)
+- max retries <=> concern left to the worker. the worker can attach a max retry arg / result to the task then fail the task if the max number of retries is reached
+
 
