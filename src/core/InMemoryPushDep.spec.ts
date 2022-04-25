@@ -7,13 +7,18 @@ describe('InMemoryPushDep tests', () => {
   it('It should write and read a kind', async() => {
     const pushDep = new InMemoryPushDep();
     await pushDep.setKindAsync({ name: "a", concurrency: 3 });
-    const kind = await pushDep.getKindAsync("a");
-    expect(kind).not.toBeNull();
-    expect(kind).toEqual({
-      kind: "a",
+
+    const kindA = await pushDep.getKindAsync("a");
+    expect(kindA).not.toBeNull();
+    expect(kindA).toEqual({
+      name: "a",
       concurrency: 3
     });
-    expect.assertions(2);
+
+    const kindB = await pushDep.getKindAsync("b");
+    expect(kindB).toBeNull();
+
+    expect.assertions(3);
   });
 
   it('It should push a task assigning it its id when necessary', async () => {
