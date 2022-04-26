@@ -9,7 +9,15 @@ export class TaskExecution implements PushDepTaskExecution {
         name: "id",
         type: "int"
     })
-    id: number
+    id: number;
+
+    @Column({
+        name: "state",
+        type: "int",
+        nullable: false,
+        comment: "State of this execution"
+    })
+    state: number;
 
     @Column({
         name: "started_at",

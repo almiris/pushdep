@@ -10,7 +10,7 @@ export class Kind implements PushDepKind {
         type: "text",
         comment: "Name of this kind"
     })
-    name: string
+    name: string;
 
     @Column({
         name: "concurrency",
@@ -18,7 +18,7 @@ export class Kind implements PushDepKind {
         nullable: false,
         comment: "Max concurrency for this kind - Multiple workers will only be able to execute this number of tasks concurrently"
     })
-    concurrency: number
+    concurrency: number;
 
     @CreateDateColumn({
         name: "created_at",
