@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "./PushDep";
+import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "./PushDep";
 
 type KindsMappedByKind = { 
     [kind: string]: PushDepKind
@@ -37,7 +37,8 @@ class InMemoryTasks {
     push(task: PushDepTask): void {
         const taskExecution = this.allTasks[task.id];
         if (!taskExecution) {
-            const taskExecution = PushDepTaskExecution.build(Object.assign(new PushDepTask(), task));
+            task.priority = task.priority || 1;
+            const taskExecution = PushDepTaskExecutionBuilder.build(task);
             this.pushByPriority(taskExecution, this.pendingTasks);
             this.allTasks[task.id] = taskExecution;
         } 
@@ -45,7 +46,7 @@ class InMemoryTasks {
             this.changeTaskState(taskExecution.task, PushDepExecutionState.pending);
         } 
         else if (taskExecution.state === PushDepExecutionState.pending) {
-            if (task.kind !== taskExecution.task.kind
+            if (task.kindId !== taskExecution.task.kindId
                 || task.priority !== taskExecution.task.priority) {
                 this.remove(taskExecution, this.pendingTasks);
                 taskExecution.task = task;
@@ -64,9 +65,9 @@ class InMemoryTasks {
     }
 
     pushByKind(taskExecution: PushDepTaskExecution, tasks: TasksMappedByKindOrderedByPushTime): void {
-        const tasksForKind = tasks[taskExecution.task.kind] || [];
+        const tasksForKind = tasks[taskExecution.task.kindId] || [];
         tasksForKind.push(taskExecution);
-        tasks[taskExecution.task.kind] = tasksForKind;
+        tasks[taskExecution.task.kindId] = tasksForKind;
     }
 
     count(kind: string): PushDepTaskCount {
@@ -82,7 +83,7 @@ class InMemoryTasks {
 
     countByKind(kind: string, tasks: TasksMappedByPriority): number {
         return Object.keys(tasks).reduce((result: number, priority: string) => 
-            result + (tasks[priority][kind]?.length || 0), 0);
+            result + (tasks[priority][kind]?.length || 0), 0);
     }
 
     peek(kind: string): PushDepTask {
@@ -110,8 +111,8 @@ class InMemoryTasks {
             for (const priority of prioritiesDesc) {
                 const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kind];
                 if (tasksForPriorityAndKind) {
-                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencyIds 
-                    || taskExecution.task.dependencyIds.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
+                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
+                    || taskExecution.task.dependencies.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
                     if (index !== -1) {
                         const task = tasksForPriorityAndKind[index];
                         if (pop) {
@@ -157,8 +158,8 @@ class InMemoryTasks {
      * @param tasks 
      */
     remove(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): void {
-        const index = tasks[taskExecution.task.priority][taskExecution.task.kind].findIndex(te => te.task.id === taskExecution.task.id);
-        tasks[taskExecution.task.priority][taskExecution.task.kind].splice(index, 1);
+        const index = tasks[taskExecution.task.priority][taskExecution.task.kindId].findIndex(te => te.task.id === taskExecution.task.id);
+        tasks[taskExecution.task.priority][taskExecution.task.kindId].splice(index, 1);
     }
 
     changeTaskState(task: PushDepTask, state: PushDepExecutionState): void {

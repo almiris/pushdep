@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { DataSource, Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
-import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "../core/PushDep";
+import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "../core/PushDep";
 import { Kind } from "./Kind.entity";
 
 type KindsMappedByKind = { 
@@ -51,22 +51,23 @@ class TypeORMTasks {
         }))[0] || null;
     }
     
-    push(task: PushDepTask): void {
+    async push(task: PushDepTask): Promise<void> {
         const taskExecution = this.allTasks[task.id];
         if (!taskExecution) {
-            const taskExecution = PushDepTaskExecution.build(Object.assign(new PushDepTask(), task));
-            this.pushByPriority(taskExecution, this.pendingTasks);
+            task.priority = task.priority || 1;
+            const taskExecution = PushDepTaskExecutionBuilder.build(task);
+            await this.pushByPriority(taskExecution, this.pendingTasks);
             this.allTasks[task.id] = taskExecution;
         } 
         else if (taskExecution.state === PushDepExecutionState.active) {
-            this.changeTaskState(taskExecution.task, PushDepExecutionState.pending);
+            await this.changeTaskState(taskExecution.task, PushDepExecutionState.pending);
         } 
         else if (taskExecution.state === PushDepExecutionState.pending) {
-            if (task.kind !== taskExecution.task.kind
+            if (task.kindId !== taskExecution.task.kindId
                 || task.priority !== taskExecution.task.priority) {
-                this.remove(taskExecution, this.pendingTasks);
+                await this.remove(taskExecution, this.pendingTasks);
                 taskExecution.task = task;
-                this.pushByPriority(taskExecution, this.pendingTasks);
+                await this.pushByPriority(taskExecution, this.pendingTasks);
             }
             else {
                 taskExecution.task = task;
@@ -74,36 +75,36 @@ class TypeORMTasks {
         }
     }
 
-    pushByPriority(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): void {
+    async pushByPriority(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): Promise<void> {
         const tasksForPriority = tasks[taskExecution.task.priority] || {};
-        this.pushByKind(taskExecution, tasksForPriority);
+        await this.pushByKind(taskExecution, tasksForPriority);
         tasks[taskExecution.task.priority] = tasksForPriority;
     }
 
-    pushByKind(taskExecution: PushDepTaskExecution, tasks: TasksMappedByKindOrderedByPushTime): void {
-        const tasksForKind = tasks[taskExecution.task.kind] || [];
+    async pushByKind(taskExecution: PushDepTaskExecution, tasks: TasksMappedByKindOrderedByPushTime): Promise<void> {
+        const tasksForKind = tasks[taskExecution.task.kindId] || [];
         tasksForKind.push(taskExecution);
-        tasks[taskExecution.task.kind] = tasksForKind;
+        tasks[taskExecution.task.kindId] = tasksForKind;
     }
 
-    count(kind: string): PushDepTaskCount {
+    async count(kind: string): Promise<PushDepTaskCount> {
         return {
-            pending: this.countByKind(kind, this.pendingTasks),
-            active: this.countByKind(kind, this.activeTasks),
-            completed: this.countByKind(kind, this.completedTasks),
-            canceled: this.countByKind(kind, this.canceledTasks),
-            failed: this.countByKind(kind, this.failedTasks),
+            pending: await this.countByKind(kind, this.pendingTasks),
+            active: await this.countByKind(kind, this.activeTasks),
+            completed: await this.countByKind(kind, this.completedTasks),
+            canceled: await this.countByKind(kind, this.canceledTasks),
+            failed: await this.countByKind(kind, this.failedTasks),
             all: Object.keys(this.allTasks).length
         };
     }
 
-    countByKind(kind: string, tasks: TasksMappedByPriority): number {
+    async countByKind(kind: string, tasks: TasksMappedByPriority): Promise<number> {
         return Object.keys(tasks).reduce((result: number, priority: string) => 
-            result + (tasks[priority][kind]?.length || 0), 0);
+            result + (tasks[priority][kind]?.length || 0), 0);
     }
 
-    peek(kind: string): PushDepTask {
-        return this.findByKind(kind, this.pendingTasks, false)?.task || null;
+    async peek(kind: string): Promise<PushDepTask> {
+        return (await this.findByKind(kind, this.pendingTasks, false))?.task || null;
     }
 
     /**
@@ -112,23 +113,23 @@ class TypeORMTasks {
      * @param kind
      * @returns 
      */
-    pop(kind: string): PushDepTask {
-        const task = this.findByKind(kind, this.pendingTasks, true);
+    async pop(kind: string): Promise<PushDepTask> {
+        const task = await this.findByKind(kind, this.pendingTasks, true);
         if (task) {
             delete this.allTasks[task.task.id];
         }
         return task?.task || null;
     }
 
-    findByKind(kind: string, tasks: TasksMappedByPriority, pop = false): PushDepTaskExecution {
+    async findByKind(kind: string, tasks: TasksMappedByPriority, pop = false): Promise<PushDepTaskExecution> {
         const keys = Object.keys(this.pendingTasks);
         if (keys.length !== 0) {
             const prioritiesDesc = keys.map(p => Number(p)).sort((a, b) => b - a);
             for (const priority of prioritiesDesc) {
                 const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kind];
                 if (tasksForPriorityAndKind) {
-                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencyIds 
-                    || taskExecution.task.dependencyIds.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
+                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
+                    || taskExecution.task.dependencies.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
                     if (index !== -1) {
                         const task = tasksForPriorityAndKind[index];
                         if (pop) {
@@ -142,29 +143,29 @@ class TypeORMTasks {
         return null;
     }
 
-    start(kind: string): PushDepTask {
+    async start(kind: string): Promise<PushDepTask> {
         const concurrency = this.kinds[kind]?.concurrency;
-        if (this.countByKind(kind, this.activeTasks) >= concurrency) {
+        if (await this.countByKind(kind, this.activeTasks) >= concurrency) {
             return null;
         }
 
-        const task = this.findByKind(kind, this.pendingTasks, true)?.task || null;
+        const task = (await this.findByKind(kind, this.pendingTasks, true))?.task || null;
         if (task) {
-            this.changeTaskState(task, PushDepExecutionState.active);
+            await this.changeTaskState(task, PushDepExecutionState.active);
         }
         return task;
     }
 
-    complete(task: PushDepTask): void {
-        this.changeTaskState(task, PushDepExecutionState.completed);
+    async complete(task: PushDepTask): Promise<void> {
+        await this.changeTaskState(task, PushDepExecutionState.completed);
     }
 
-    cancel(task: PushDepTask): void {
-        this.changeTaskState(task, PushDepExecutionState.canceled);
+    async cancel(task: PushDepTask): Promise<void> {
+        await this.changeTaskState(task, PushDepExecutionState.canceled);
     }
 
-    fail(task: PushDepTask): void {
-        this.changeTaskState(task, PushDepExecutionState.failed);
+    async fail(task: PushDepTask): Promise<void> {
+        await this.changeTaskState(task, PushDepExecutionState.failed);
     }
 
     /**
@@ -173,12 +174,12 @@ class TypeORMTasks {
      * @param taskExecution 
      * @param tasks 
      */
-    remove(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): void {
-        const index = tasks[taskExecution.task.priority][taskExecution.task.kind].findIndex(te => te.task.id === taskExecution.task.id);
-        tasks[taskExecution.task.priority][taskExecution.task.kind].splice(index, 1);
+    async remove(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): Promise<void> {
+        const index = tasks[taskExecution.task.priority][taskExecution.task.kindId].findIndex(te => te.task.id === taskExecution.task.id);
+        tasks[taskExecution.task.priority][taskExecution.task.kindId].splice(index, 1);
     }
 
-    changeTaskState(task: PushDepTask, state: PushDepExecutionState): void {
+    async changeTaskState(task: PushDepTask, state: PushDepExecutionState): Promise<void> {
         const taskExecution = this.allTasks[task.id];
         if (!taskExecution) {
             throw new Error(`Incorrect state change for task ${task.id}`);
@@ -189,34 +190,34 @@ class TypeORMTasks {
         switch (state) {
             case PushDepExecutionState.pending: 
                 if (previousState === PushDepExecutionState.active) {
-                    this.remove(taskExecution, this.activeTasks);
+                    await this.remove(taskExecution, this.activeTasks);
                     taskExecution.startedAt = null;
-                    this.pushByPriority(taskExecution, this.pendingTasks);
+                    await this.pushByPriority(taskExecution, this.pendingTasks);
                 }
                 else if (previousState === PushDepExecutionState.pending) {
-                    this.remove(taskExecution, this.pendingTasks);
-                    this.pushByPriority(taskExecution, this.pendingTasks);    
+                    await this.remove(taskExecution, this.pendingTasks);
+                    await this.pushByPriority(taskExecution, this.pendingTasks);    
                 }
                 break;
             case PushDepExecutionState.active: 
                 // already removed from pendings by findByKind()
                 taskExecution.startedAt = new Date();
-                this.pushByPriority(taskExecution, this.activeTasks);
+                await this.pushByPriority(taskExecution, this.activeTasks);
                 break;
             case PushDepExecutionState.completed: 
-                this.remove(taskExecution, this.activeTasks);
+                await this.remove(taskExecution, this.activeTasks);
                 taskExecution.completedAt = new Date();
-                this.pushByPriority(taskExecution, this.completedTasks);
+                await this.pushByPriority(taskExecution, this.completedTasks);
                 break;
             case PushDepExecutionState.canceled: 
-                this.remove(taskExecution, this.activeTasks);
+                await this.remove(taskExecution, this.activeTasks);
                 taskExecution.canceledAt = new Date();
-                this.pushByPriority(taskExecution, this.canceledTasks);
+                await this.pushByPriority(taskExecution, this.canceledTasks);
                 break;
             case PushDepExecutionState.failed: 
-                this.remove(taskExecution, this.activeTasks);
+                await this.remove(taskExecution, this.activeTasks);
                 taskExecution.failedAt = new Date();
-                this.pushByPriority(taskExecution, this.failedTasks);
+                await this.pushByPriority(taskExecution, this.failedTasks);
                 break;
             default:
                 throw new Error(`Incorrect task state: ${state}`);
@@ -241,35 +242,35 @@ export class TypeORMPushDep implements PushDep {
 
     async pushAsync(task: PushDepTask): Promise<string> {
         task.id = task.id || uuidv4();
-        this.tasks.push(task);
+        await this.tasks.push(task);
         return task.id;
     }
 
     async peekAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.peek(kind);
+        return await this.tasks.peek(kind);
     }
 
     async countAsync(kind: string): Promise<PushDepTaskCount> {
-        return this.tasks.count(kind);
+        return await this.tasks.count(kind);
     }
 
     async popAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.pop(kind);
+        return await this.tasks.pop(kind);
     }
 
     async startAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.start(kind);
+        return await this.tasks.start(kind);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.complete(task);
+        return await this.tasks.complete(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.cancel(task);
+        return await this.tasks.cancel(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.fail(task);
+        return await this.tasks.fail(task);
     }
 }

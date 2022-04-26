@@ -2,6 +2,8 @@ import "dotenv/config";
 import { DataSource } from "typeorm"
 import { TypeORMPushDep } from "src/typeorm/TypeORMPushDep";
 import { Kind } from "./Kind.entity";
+import { Task } from "./Task.entity";
+import { TaskExecution } from "./TaskExecution.entity";
 
 let dataSource: DataSource;
 
@@ -19,7 +21,7 @@ describe('TypeORMPushDep tests', () => {
       extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
       synchronize: true,
       logging: true,
-      entities: [Kind],
+      entities: [Kind, Task, TaskExecution],
       migrations: [],
       subscribers: [],
     });
@@ -49,22 +51,22 @@ describe('TypeORMPushDep tests', () => {
     expect.assertions(3);
   });
 
-  // it('It should push a task assigning it its id when necessary', async () => {
-  //   const pushDep = new TypeORMPushDep();
-  //   const id = await pushDep.pushAsync({
-  //     id: "my_id",
-  //     kind: "a"
-  //   });
-  //   const newId = await pushDep.pushAsync({
-  //     kind: "a"
-  //   });
+  it('It should push a task assigning it its id when necessary', async () => {
+    const pushDep = new TypeORMPushDep(dataSource);
+    const id = await pushDep.pushAsync({
+      id: "my_id",
+      kindId: "a"
+    });
+    const newId = await pushDep.pushAsync({
+      kindId: "a"
+    });
 
-  //   expect(id).toBe("my_id");
-  //   expect(newId).not.toBeNull();
-  //   expect(newId.length).toBe(36);
-  //   expect((await pushDep.countAsync("a")).pending).toBe(2);
-  //   expect.assertions(4);
-  // });
+    expect(id).toBe("my_id");
+    expect(newId).not.toBeNull();
+    expect(newId.length).toBe(36);
+    expect((await pushDep.countAsync("a")).pending).toBe(2);
+    expect.assertions(4);
+  });
 
   /*
   it('It should count tasks', async () => {
