@@ -4,12 +4,12 @@ export interface PushDepKind {
     // retry?: number; // TODO
 }
 
-export class PushDepTask {
+export interface PushDepTask {
     id?: string;
-    kind: string;
-    dependencyIds?: string[];
+    kindId: string;
+    dependencies?: any[];
     args?: any;
-    priority?: number = 0;
+    priority?: number;
     results?: any;
     // retry?: number; // TODO
 }
@@ -31,19 +31,23 @@ export interface PushDepTaskCount {
     all: number;
 }
 
-export class PushDepTaskExecution {
+export interface PushDepTaskExecution {
     task: PushDepTask;
-    state?: PushDepExecutionState = PushDepExecutionState.pending;
-    createdAt?: Date = new Date();
+    state?: PushDepExecutionState;
+    createdAt?: Date;
     startedAt?: Date;
     completedAt?: Date;
     canceledAt?: Date;
     failedAt?: Date;
+}
 
-    static build(task: PushDepTask) {
-        const taskExecution = new PushDepTaskExecution();
-        taskExecution.task = task;
-        return taskExecution;
+export class PushDepTaskExecutionBuilder {
+    static build(task: PushDepTask): PushDepTaskExecution {
+        return {
+            task: task,
+            state: PushDepExecutionState.pending,
+            createdAt: new Date()
+        }
     }
 }
 

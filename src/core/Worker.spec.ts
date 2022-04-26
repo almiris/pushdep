@@ -30,9 +30,9 @@ describe('Worker tests', () => {
     const workerB = new PushDepWorker(pushDep, workerOptionsB, consoleWorkerFunction);
     workerB.startAsync();
 
-    await pushDep.pushAsync({ kind: "a", id: "1" });
-    await pushDep.pushAsync({ kind: "a", id: "2" });
-    await pushDep.pushAsync({ kind: "a", id: "3" });
+    await pushDep.pushAsync({ kindId: "a", id: "1" });
+    await pushDep.pushAsync({ kindId: "a", id: "2" });
+    await pushDep.pushAsync({ kindId: "a", id: "3" });
 
     await sleep(1000);
 
@@ -79,12 +79,12 @@ describe('Worker tests', () => {
     }, consoleWorkerFunction);
     worker3.startAsync();
 
-    await pushDep.pushAsync({ kind: "a", id: "1" });
-    await pushDep.pushAsync({ kind: "a", id: "2" });
-    await pushDep.pushAsync({ kind: "a", id: "3" });
-    await pushDep.pushAsync({ kind: "b", id: "4", dependencyIds: ["1", "2"] });
-    await pushDep.pushAsync({ kind: "b", id: "5", dependencyIds: ["1", "3"]});
-    await pushDep.pushAsync({ kind: "a", id: "6", dependencyIds: ["4", "5"] });
+    await pushDep.pushAsync({ kindId: "a", id: "1" });
+    await pushDep.pushAsync({ kindId: "a", id: "2" });
+    await pushDep.pushAsync({ kindId: "a", id: "3" });
+    await pushDep.pushAsync({ kindId: "b", id: "4", dependencies: ["1", "2"] });
+    await pushDep.pushAsync({ kindId: "b", id: "5", dependencies: ["1", "3"]});
+    await pushDep.pushAsync({ kindId: "a", id: "6", dependencies: ["4", "5"] });
 
     await sleep(1000);
 
@@ -133,12 +133,12 @@ describe('Worker tests', () => {
     const workerBar = new PushDepWorker(pushDep, { kind: "bar", idleTimeoutMs: 100 }, workerFunction);
     workerBar.startAsync();
 
-    await pushDep.pushAsync({ kind: "foo", id: "1" });
-    await pushDep.pushAsync({ kind: "foo", id: "2" });
-    await pushDep.pushAsync({ kind: "foo", id: "3" });
-    await pushDep.pushAsync({ kind: "bar", id: "4", dependencyIds: ["1", "2"] });
-    await pushDep.pushAsync({ kind: "bar", id: "5", dependencyIds: ["1", "3"]});
-    await pushDep.pushAsync({ kind: "foo", id: "6", dependencyIds: ["4", "5"] });
+    await pushDep.pushAsync({ kindId: "foo", id: "1" });
+    await pushDep.pushAsync({ kindId: "foo", id: "2" });
+    await pushDep.pushAsync({ kindId: "foo", id: "3" });
+    await pushDep.pushAsync({ kindId: "bar", id: "4", dependencies: ["1", "2"] });
+    await pushDep.pushAsync({ kindId: "bar", id: "5", dependencies: ["1", "3"]});
+    await pushDep.pushAsync({ kindId: "foo", id: "6", dependencies: ["4", "5"] });
 
     await sleep(1000);
 

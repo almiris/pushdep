@@ -25,10 +25,10 @@ describe('InMemoryPushDep tests', () => {
     const pushDep = new InMemoryPushDep();
     const id = await pushDep.pushAsync({
       id: "my_id",
-      kind: "a"
+      kindId: "a"
     });
     const newId = await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     expect(id).toBe("my_id");
@@ -41,9 +41,9 @@ describe('InMemoryPushDep tests', () => {
   it('It should count tasks', async () => {
     const pushDep = new InMemoryPushDep();
 
-    await pushDep.pushAsync({ kind: "a" });
-    await pushDep.pushAsync({ kind: "a" });
-    await pushDep.pushAsync({ kind: "a" });
+    await pushDep.pushAsync({ kindId: "a" });
+    await pushDep.pushAsync({ kindId: "a" });
+    await pushDep.pushAsync({ kindId: "a" });
 
     let count = await pushDep.countAsync("a");
     expect(count).toEqual({
@@ -70,16 +70,16 @@ describe('InMemoryPushDep tests', () => {
 
   it('It should peek a task using priority', async () => {
     const pushDep = new InMemoryPushDep();
-    const id0 = await pushDep.pushAsync({ kind: "a" });
+    const id0 = await pushDep.pushAsync({ kindId: "a" });
 
     let task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id0);
 
-    const id2 = await pushDep.pushAsync({ kind: "a", priority: 2 });
+    const id2 = await pushDep.pushAsync({ kindId: "a", priority: 2 });
     task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id2);
 
-    const id10 = await pushDep.pushAsync({ kind: "a", priority: 10 });
+    const id10 = await pushDep.pushAsync({ kindId: "a", priority: 10 });
     task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id10);
 
@@ -88,9 +88,9 @@ describe('InMemoryPushDep tests', () => {
 
   it('It should peek a task using priority and dependencies', async () => {
     const pushDep = new InMemoryPushDep();
-    const id0 = await pushDep.pushAsync({ kind: "a" });
-    const id2 = await pushDep.pushAsync({ kind: "a", priority: 2, dependencyIds: [id0]});
-    await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
+    const id0 = await pushDep.pushAsync({ kindId: "a" });
+    const id2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [id0]});
+    await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [id2]});
 
     const task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id0);
@@ -106,9 +106,9 @@ describe('InMemoryPushDep tests', () => {
 
   it('It should pop tasks', async () => {
     const pushDep = new InMemoryPushDep();
-    const id0 = await pushDep.pushAsync({ kind: "a" });
-    const id2 = await pushDep.pushAsync({ kind: "a", priority: 2, dependencyIds: [id0]});
-    const id10 = await pushDep.pushAsync({ kind: "a", priority: 10, dependencyIds: [id2]});
+    const id0 = await pushDep.pushAsync({ kindId: "a" });
+    const id2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [id0]});
+    const id10 = await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [id2]});
     const ids = [id0, id2, id10];
     let count = await pushDep.countAsync("a");
 
@@ -127,7 +127,7 @@ describe('InMemoryPushDep tests', () => {
   it('It should start then complete a task', async () => {
     const pushDep = new InMemoryPushDep();
     await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     const task = await pushDep.startAsync("a");
@@ -160,7 +160,7 @@ describe('InMemoryPushDep tests', () => {
   it('It should start then cancel a task', async () => {
     const pushDep = new InMemoryPushDep();
     await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     const task = await pushDep.startAsync("a");
@@ -193,7 +193,7 @@ describe('InMemoryPushDep tests', () => {
   it('It should start then fail a task', async () => {
     const pushDep = new InMemoryPushDep();
     await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     const task = await pushDep.startAsync("a");
@@ -226,7 +226,7 @@ describe('InMemoryPushDep tests', () => {
   it('It should start then repush a task', async () => {
     const pushDep = new InMemoryPushDep();
     await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     const task = await pushDep.startAsync("a");
@@ -259,7 +259,7 @@ describe('InMemoryPushDep tests', () => {
   it('It should repush a pending task', async () => {
     const pushDep = new InMemoryPushDep();
     await pushDep.pushAsync({
-      kind: "a"
+      kindId: "a"
     });
 
     const task = await pushDep.popAsync("a");
@@ -283,7 +283,7 @@ describe('InMemoryPushDep tests', () => {
     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const i in [1, 2, 3, 4]) {
-      await pushDep.pushAsync({ kind: "a" });
+      await pushDep.pushAsync({ kindId: "a" });
       await pushDep.startAsync("a");
     }
 
@@ -302,7 +302,7 @@ describe('InMemoryPushDep tests', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const i in [1, 2, 3, 4]) {
-      await pushDep.pushAsync({ kind: "a" });
+      await pushDep.pushAsync({ kindId: "a" });
       await pushDep.startAsync("a");
     }
 
