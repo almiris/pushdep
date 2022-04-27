@@ -92,6 +92,15 @@ describe('InMemoryPushDep tests', () => {
     const id2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [id0]});
     await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [id2]});
 
+    // const task0 = await pushDep.pushAsync({ kindId: "a" });
+    // const task2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [task0]});
+    // await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [task2]});
+
+    // const task0 = await pushDep.pushAsync({ kindId: "a" });
+    // await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [{
+    //   kindId: "a", priority: 2, dependencies: [task0]
+    // }]});
+
     const task = await pushDep.peekAsync("a");
     expect(task.id).toBe(id0);
     expect.assertions(1);

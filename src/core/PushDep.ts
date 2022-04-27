@@ -5,7 +5,7 @@ export interface PushDepKind {
 }
 
 export interface PushDepTask {
-    id?: string;
+    readonly id?: string; // should be readonly
     kindId: string;
     dependencies?: any[];
     args?: any;
