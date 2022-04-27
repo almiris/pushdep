@@ -3,6 +3,7 @@ import { DataSource, Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "../core/PushDep";
 import { Kind } from "./Kind.entity";
+import { Task } from "./Task.entity";
 
 type KindsMappedByKind = { 
     [kind: string]: PushDepKind
@@ -241,9 +242,10 @@ export class TypeORMPushDep implements PushDep {
     }
 
     async pushAsync(task: PushDepTask): Promise<string> {
-        task.id = task.id || uuidv4();
-        await this.tasks.push(task);
-        return task.id;
+        const ormTask = task as Task;
+        ormTask.id = ormTask.id || uuidv4(); // TODO supress || uuidv4()
+        await this.tasks.push(ormTask);
+        return ormTask.id;
     }
 
     async peekAsync(kind: string): Promise<PushDepTask> {

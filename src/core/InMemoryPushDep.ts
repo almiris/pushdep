@@ -17,6 +17,10 @@ type TasksMappedById = {
     [id: string]: PushDepTaskExecution 
 }
 
+interface InMemoryTask extends PushDepTask {
+    id: string;
+}
+
 class InMemoryTasks {
     kinds: KindsMappedByKind = {};
     pendingTasks: TasksMappedByPriority = {};
@@ -220,9 +224,10 @@ export class InMemoryPushDep implements PushDep {
     }
 
     async pushAsync(task: PushDepTask): Promise<string> {
-        task.id = task.id || uuidv4();
-        this.tasks.push(task);
-        return task.id;
+        const inMemoryTask = task as InMemoryTask;
+        inMemoryTask.id = inMemoryTask.id || uuidv4();
+        this.tasks.push(inMemoryTask);
+        return inMemoryTask.id;
     }
 
     async peekAsync(kind: string): Promise<PushDepTask> {
