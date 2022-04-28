@@ -6,11 +6,11 @@ import { Task } from "./Task.entity";
 export class Kind implements PushDepKind {
 
     @PrimaryColumn({
-        name: "name",
+        name: "id",
         type: "text",
-        comment: "Name of this kind"
+        comment: "Id of this kind"
     })
-    name: string;
+    id: string;
 
     @Column({
         name: "concurrency",

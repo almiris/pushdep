@@ -1,18 +1,27 @@
 export interface PushDepKind {
-    name: string;
+    id: string;
     concurrency: number;
     // retry?: number; // TODO
 }
 
 export interface PushDepTask {
-    readonly id?: string; // should be readonly
+    readonly id?: string;
     kindId: string;
-    dependencies?: any[];
+    dependencies?: PushDepTask[];
     args?: any;
     priority?: number;
     results?: any;
     // retry?: number; // TODO
 }
+
+export const PushDepTaskProperties: PushDepTask = {
+    id: null,
+    kindId: null,
+    dependencies: null,
+    args: null,
+    priority: null,
+    results: null
+};
 
 export enum PushDepExecutionState {
     pending = 1,
@@ -53,12 +62,11 @@ export class PushDepTaskExecutionBuilder {
 
 export interface PushDep {
     setKindAsync(kind: PushDepKind): Promise<void>;
-    getKindAsync(kind: string): Promise<PushDepKind>;
-    pushAsync(task: PushDepTask): Promise<string>;
-    peekAsync(kind: string): Promise<PushDepTask>;
-    countAsync(kind: string): Promise<PushDepTaskCount>;
-    popAsync(kind: string): Promise<PushDepTask>;
-    startAsync(kind: string): Promise<PushDepTask>;
+    getKindAsync(kindId: string): Promise<PushDepKind>;
+    pushAsync(task: PushDepTask): Promise<PushDepTask>;
+    countAsync(kindId?: string): Promise<PushDepTaskCount>;
+    peekAsync(kindId: string): Promise<PushDepTask>;
+    startAsync(kindId: string): Promise<PushDepTask>;
     completeAsync(task: PushDepTask): Promise<void>;
     cancelAsync(task: PushDepTask): Promise<void>;
     failAsync(task: PushDepTask): Promise<void>;

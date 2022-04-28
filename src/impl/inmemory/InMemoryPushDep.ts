@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "./PushDep";
+import { PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "../../core/PushDep";
 
 type KindsMappedByKind = { 
     [kind: string]: PushDepKind
@@ -31,11 +31,11 @@ class InMemoryTasks {
     allTasks: TasksMappedById = {};
 
     setKind(kind: PushDepKind): void {
-        this.kinds[kind.name] = kind;
+        this.kinds[kind.id] = kind;
     }
 
-    getKind(kind: string): PushDepKind {
-        return this.kinds[kind] || null;
+    getKind(kindId: string): PushDepKind {
+        return this.kinds[kindId] || null;
     }
     
     push(task: PushDepTask): void {
@@ -74,46 +74,32 @@ class InMemoryTasks {
         tasks[taskExecution.task.kindId] = tasksForKind;
     }
 
-    count(kind: string): PushDepTaskCount {
+    count(kindId: string): PushDepTaskCount {
         return {
-            pending: this.countByKind(kind, this.pendingTasks),
-            active: this.countByKind(kind, this.activeTasks),
-            completed: this.countByKind(kind, this.completedTasks),
-            canceled: this.countByKind(kind, this.canceledTasks),
-            failed: this.countByKind(kind, this.failedTasks),
+            pending: this.countByKind(kindId, this.pendingTasks),
+            active: this.countByKind(kindId, this.activeTasks),
+            completed: this.countByKind(kindId, this.completedTasks),
+            canceled: this.countByKind(kindId, this.canceledTasks),
+            failed: this.countByKind(kindId, this.failedTasks),
             all: Object.keys(this.allTasks).length
         };
     }
 
-    countByKind(kind: string, tasks: TasksMappedByPriority): number {
+    countByKind(kindId: string, tasks: TasksMappedByPriority): number {
         return Object.keys(tasks).reduce((result: number, priority: string) => 
-            result + (tasks[priority][kind]?.length || 0), 0);
+            result + (tasks[priority][kindId]?.length || 0), 0);
     }
 
-    peek(kind: string): PushDepTask {
-        return this.findByKind(kind, this.pendingTasks, false)?.task || null;
+    peek(kindId: string): PushDepTask {
+        return this.findByKind(kindId, this.pendingTasks, false)?.task || null;
     }
 
-    /**
-     * Important: if a task is popped, it is not deleted in other task dependencies
-     * (else we would have to maintain a parent array in each tasks)
-     * @param kind
-     * @returns 
-     */
-    pop(kind: string): PushDepTask {
-        const task = this.findByKind(kind, this.pendingTasks, true);
-        if (task) {
-            delete this.allTasks[task.task.id];
-        }
-        return task?.task || null;
-    }
-
-    findByKind(kind: string, tasks: TasksMappedByPriority, pop = false): PushDepTaskExecution {
+    findByKind(kindId: string, tasks: TasksMappedByPriority, pop = false): PushDepTaskExecution {
         const keys = Object.keys(this.pendingTasks);
         if (keys.length !== 0) {
             const prioritiesDesc = keys.map(p => Number(p)).sort((a, b) => b - a);
             for (const priority of prioritiesDesc) {
-                const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kind];
+                const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kindId];
                 if (tasksForPriorityAndKind) {
                     const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
                     || taskExecution.task.dependencies.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
@@ -130,13 +116,13 @@ class InMemoryTasks {
         return null;
     }
 
-    start(kind: string): PushDepTask {
-        const concurrency = this.kinds[kind]?.concurrency;
-        if (this.countByKind(kind, this.activeTasks) >= concurrency) {
+    start(kindId: string): PushDepTask {
+        const concurrency = this.kinds[kindId]?.concurrency;
+        if (this.countByKind(kindId, this.activeTasks) >= concurrency) {
             return null;
         }
 
-        const task = this.findByKind(kind, this.pendingTasks, true)?.task || null;
+        const task = this.findByKind(kindId, this.pendingTasks, true)?.task || null;
         if (task) {
             this.changeTaskState(task, PushDepExecutionState.active);
         }
@@ -219,8 +205,8 @@ export class InMemoryPushDep implements PushDep {
         this.tasks.setKind(kind);
     }
 
-    async getKindAsync(kind: string): Promise<PushDepKind> {
-        return this.tasks.getKind(kind);
+    async getKindAsync(kindId: string): Promise<PushDepKind> {
+        return this.tasks.getKind(kindId);
     }
 
     async pushAsync(task: PushDepTask): Promise<string> {
@@ -230,20 +216,16 @@ export class InMemoryPushDep implements PushDep {
         return inMemoryTask.id;
     }
 
-    async peekAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.peek(kind);
+    async countAsync(kindId: string): Promise<PushDepTaskCount> {
+        return this.tasks.count(kindId);
     }
 
-    async countAsync(kind: string): Promise<PushDepTaskCount> {
-        return this.tasks.count(kind);
+    async peekAsync(kindId: string): Promise<PushDepTask> {
+        return this.tasks.peek(kindId);
     }
 
-    async popAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.pop(kind);
-    }
-
-    async startAsync(kind: string): Promise<PushDepTask> {
-        return this.tasks.start(kind);
+    async startAsync(kindId: string): Promise<PushDepTask> {
+        return this.tasks.start(kindId);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {

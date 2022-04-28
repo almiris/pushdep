@@ -73,10 +73,30 @@ in memory storage; or TTL, or parent counter (to supported multiple unrelated pa
 - re-pushing tasks may lead to have orphin tasks - should we check that or do we leave the responsability to the user?
 - move priority to taskExecution to make it invariant unless task is repushed
 - auto deletion of completed as soon as it is completed, using a TTL. TTL = 0 auto deletion, TTL > 0 will be deleted from time to time (depending on the number of tasks in the system or some periodicity), TTL = -1 keep the task => cleaning will be realized by a worker or an external system using the pushdep directly
+- add tags to task - could help search task in the DB instead of having to use JSON searching; using a table like (task_id, tag, value) with (task_id, tag) as PK
+- if a task needs to have multiple executions, for example a recurring task, we would have n tasks and we could link those tasks (for example, using a tag with the same value?)
+- we could extends the simple task execution log we have now to a full log (pending -> active -> pending -> active -> ... -> active -> completed)
+- change active task from worker - change dependencies, change args, change results
+- manager task removal (only by workers or by time ?)
+- add time schedule for tasks
+- allow "back to pending" from workers (only for active tasks)
+- retryAt, could replace createdAt to find the next task. Initially, retryAt == createdAt. If a worker can't complete a task and would like a retry, then it can set the retryAt at a later timestamp; add a retried counter <=> The worker can track the retries in the results field if wanted.
+- clean the returned PushDepTasks (remove createdAt, updatedAt, deletedAt, version)
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
 - task lifecycle: pending -> active -> (pending | completed | canceled | failed). A task cannot be recurrent. For recurring task, re-push the task periodically (with the historical data as args when needed)
 - max retries <=> concern left to the worker. the worker can attach a max retry arg / result to the task then fail the task if the max number of retries is reached
+- no repush for now, meaning no modification of a task after it has been pushed. accepting modification would mean modifiying dependencies and their dependencies, removing previous dependencies not used anymore and creating new ones.
 
+## Useful requests
+
+### Clear connections
+SELECT
+	pg_terminate_backend(pg_stat_activity.pid)
+FROM
+	pg_stat_activity
+WHERE
+	pg_stat_activity.datname = '<database>'
+	AND pid <> pg_backend_pid();
 

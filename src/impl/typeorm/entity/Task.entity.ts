@@ -1,4 +1,4 @@
-import { PushDepTask } from "src/core/PushDep";
+import { PushDep, PushDepTask } from "src/core/PushDep";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, Generated, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Kind } from "./Kind.entity";
 import { TaskExecution } from "./TaskExecution.entity";
@@ -14,7 +14,7 @@ export class Task implements PushDepTask {
     id: string;
 
     @Column({
-        name: "priority", // TODO move priority to task execution?
+        name: "priority",
         type: "int",
         nullable: false,
         comment: "Priority of the task"
@@ -41,8 +41,8 @@ export class Task implements PushDepTask {
         name: "created_at",
         type: "timestamp with time zone",
         nullable: false,
-      })
-      createdAt: Date;
+    })
+    createdAt: Date;
     
     @UpdateDateColumn({
         name: "updated_at",
@@ -92,8 +92,9 @@ export class Task implements PushDepTask {
     dependencies: Task[];
 
     @ManyToMany(() => Task, task => task.dependencies)
-    children: Task[];
+    dependents: Task[];
 
+    // as of now, we have only one execution per task
     @OneToMany(() => TaskExecution, taskExecution => taskExecution.task)
     taskExecutions: Promise<TaskExecution[]>;
 }
