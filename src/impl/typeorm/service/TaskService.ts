@@ -24,7 +24,7 @@ export class TaskService extends GenericService<Task> {
                     .getQuery()}=0`;
             })
             .orderBy("task.priority", "DESC")
-            .addOrderBy("task.createdAt", "DESC")
+            .addOrderBy("task.createdAt", "ASC")
             .getOne();
     }
 

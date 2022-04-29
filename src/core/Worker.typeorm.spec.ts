@@ -90,7 +90,7 @@ describe('Worker tests using TypeORM pushDep', () => {
     expect.assertions(1);
   }, 20000);
 
-  fit('It should execute a hierarchical job using multiple workers', async () => {
+  it('It should execute a hierarchical job using multiple workers', async () => {
     const start = new Date().getTime();
 
     let numberOfTasks = 6;
@@ -165,34 +165,39 @@ describe('Worker tests using TypeORM pushDep', () => {
   }, 10000);
 
   it('It should execute a simple dummy demo', async () => {
+    const pushDep = new TypeORMPushDep(dataSource);
+
+    await pushDep.setKindAsync({ id: "foo", concurrency: 3 });
+    await pushDep.setKindAsync({ id: "bar", concurrency: 3 });
+    
     const executionPath = [];
 
     const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
-      executionPath.push(task.id);
+      executionPath.push(task.args.step);
       await pushDep.completeAsync(task);
     };
 
-    const workerFoo = new PushDepWorker(pushDep, { kindId: "foo", idleTimeoutMs: 100 }, workerFunction);
+    const workerFoo = new PushDepWorker(pushDep, { kindId: "foo", idleTimeoutMs: 10 }, workerFunction);
     workerFoo.startAsync();
 
-    const workerBar = new PushDepWorker(pushDep, { kindId: "bar", idleTimeoutMs: 100 }, workerFunction);
+    const workerBar = new PushDepWorker(pushDep, { kindId: "bar", idleTimeoutMs: 10 }, workerFunction);
     workerBar.startAsync();
 
-    const task0 = await pushDep.pushAsync({ kindId: "foo" });
-    const task1 = await pushDep.pushAsync({ kindId: "foo" });
-    const task2 = await pushDep.pushAsync({ kindId: "foo" });
-    const task3 = await pushDep.pushAsync({ kindId: "bar", dependencies: [ task0, task1 ] });
-    const task4 = await pushDep.pushAsync({ kindId: "bar", dependencies: [ task0, task2 ] });
-    await pushDep.pushAsync({ kindId: "foo", dependencies: [ task3, task4 ] });
+    const task0 = await pushDep.pushAsync({ kindId: "foo", args: { step: 0 }});
+    const task1 = await pushDep.pushAsync({ kindId: "foo", args: { step: 1 }});
+    const task2 = await pushDep.pushAsync({ kindId: "foo", args: { step: 2 }});
+    const task3 = await pushDep.pushAsync({ kindId: "bar", args: { step: 3 }, dependencies: [ task0, task1 ] });
+    const task4 = await pushDep.pushAsync({ kindId: "bar", args: { step: 4 }, dependencies: [ task0, task2 ] });
+    await pushDep.pushAsync({ kindId: "foo", args: { step: 5}, dependencies: [ task3, task4 ] });
 
-    await sleep(1000);
+    await sleep(200);
 
     await workerFoo.stopAsync();
     await workerBar.stopAsync();
 
-    await sleep(1000);
+    await sleep(200);
 
-    expect(executionPath.join("")).toBe("123456");
+    expect(["012345", "013245"]).toContain(executionPath.join(""));
     expect.assertions(1);
   });
 });
