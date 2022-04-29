@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 const sleep = promisify(setTimeout);
 
 export class PushDepWorkerOptions {
-    kind: string;
+    kindId: string;
     idleTimeoutMs = 200;
 }
 
@@ -21,7 +21,7 @@ export class PushDepWorker {
         if (!this.isRunning) {
             this.isRunning = true;
             while (this.isRunning) {
-                const task = await this.pushDep.startAsync(this.options.kind);
+                const task = await this.pushDep.startAsync(this.options.kindId);
                 if (!task) {
                     await sleep(this.options.idleTimeoutMs);
                 }

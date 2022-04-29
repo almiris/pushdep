@@ -96,5 +96,5 @@ export class Task implements PushDepTask {
 
     // as of now, we have only one execution per task
     @OneToMany(() => TaskExecution, taskExecution => taskExecution.task)
-    taskExecutions: Promise<TaskExecution[]>;
+    taskExecutions: TaskExecution[];
 }
