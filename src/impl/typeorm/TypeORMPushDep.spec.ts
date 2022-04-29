@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { DataSource, EntityManager } from "typeorm"
 import { TypeORMPushDep } from "src/impl/typeorm/TypeORMPushDep";
+import { DataSource } from "typeorm";
 import { Kind } from "./entity/Kind.entity";
 import { Task } from "./entity/Task.entity";
 import { TaskExecution } from "./entity/TaskExecution.entity";
@@ -112,52 +112,52 @@ describe('TypeORMPushDep tests', () => {
         const count = await pushDep.countAsync("a");
 
         expect(count.pending).toBe(5);
-        expect.assertions(5);        
+        expect.assertions(5);
 
         console.log(JSON.stringify(task, null, 2));
         console.log(count);
     });
 
     it('It should count tasks', async () => {
-      await pushDep.pushAsync({ kindId: "a" });
-      await pushDep.pushAsync({ kindId: "a" });
-      await pushDep.pushAsync({ kindId: "a" });
-      let count = await pushDep.countAsync("a");
+        await pushDep.pushAsync({ kindId: "a" });
+        await pushDep.pushAsync({ kindId: "a" });
+        await pushDep.pushAsync({ kindId: "a" });
+        let count = await pushDep.countAsync("a");
 
-      expect(count).toEqual({
-        pending: 3,
-        active: 0,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 3
-      });
-  
-      pushDep.setKindAsync({ id: "b", concurrency: 1 });
-      await pushDep.pushAsync({ kindId: "b" });
-      count = await pushDep.countAsync("b");
-      
-      expect(count).toEqual({
-        pending: 1,
-        active: 0,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 1
-      });
+        expect(count).toEqual({
+            pending: 3,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 3
+        });
 
-      count = await pushDep.countAsync("c");
+        pushDep.setKindAsync({ id: "b", concurrency: 1 });
+        await pushDep.pushAsync({ kindId: "b" });
+        count = await pushDep.countAsync("b");
 
-      expect(count).toEqual({
-        pending: 0,
-        active: 0,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 0
-      });
-      
-      expect.assertions(3);
+        expect(count).toEqual({
+            pending: 1,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        count = await pushDep.countAsync("c");
+
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 0
+        });
+
+        expect.assertions(3);
     });
 
     it('It should peek nothing', async () => {
@@ -166,199 +166,193 @@ describe('TypeORMPushDep tests', () => {
     });
 
     it('It should peek a task using priority', async () => {
-      const task0 = await pushDep.pushAsync({ kindId: "a" });
-  
-      let task = await pushDep.peekAsync("a");
-      expect(task.id).toBe(task0.id);
-  
-      const task2 = await pushDep.pushAsync({ kindId: "a", priority: 2 });
-      task = await pushDep.peekAsync("a");
-      expect(task.id).toBe(task2.id);
-  
-      const task10 = await pushDep.pushAsync({ kindId: "a", priority: 10 });
-      task = await pushDep.peekAsync("a");
-      expect(task.id).toBe(task10.id);
-  
-      expect.assertions(3);
+        const task0 = await pushDep.pushAsync({ kindId: "a" });
+
+        let task = await pushDep.peekAsync("a");
+        expect(task.id).toBe(task0.id);
+
+        const task2 = await pushDep.pushAsync({ kindId: "a", priority: 2 });
+        task = await pushDep.peekAsync("a");
+        expect(task.id).toBe(task2.id);
+
+        const task10 = await pushDep.pushAsync({ kindId: "a", priority: 10 });
+        task = await pushDep.peekAsync("a");
+        expect(task.id).toBe(task10.id);
+
+        expect.assertions(3);
     });
-  
+
     it('It should peek a task using priority and dependencies', async () => {
-      const task0 = await pushDep.pushAsync({ kindId: "a" });
-      const task2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [ task0 ]});
-      await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [ task2 ]});
-  
-      const task = await pushDep.peekAsync("a");
-      expect(task.id).toBe(task0.id);
-      expect.assertions(1);
+        const task0 = await pushDep.pushAsync({ kindId: "a" });
+        const task2 = await pushDep.pushAsync({ kindId: "a", priority: 2, dependencies: [task0] });
+        await pushDep.pushAsync({ kindId: "a", priority: 10, dependencies: [task2] });
+
+        const task = await pushDep.peekAsync("a");
+        expect(task.id).toBe(task0.id);
+        expect.assertions(1);
     });
-  
-    fit('It should start then complete a task', async () => {
-      await pushDep.pushAsync({
-        kindId: "a"
-      });
-  
-      const task = await pushDep.startAsync("a");
-  
-      let count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 1,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 1
-      });
-  
-      await pushDep.completeAsync(task);
-  
-      count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 0,
-        completed: 1,
-        canceled: 0,
-        failed: 0,
-        all: 1
-      });
-  
-      expect.assertions(2);
+
+    it('It should start then complete a task', async () => {
+        await pushDep.pushAsync({
+            kindId: "a"
+        });
+
+        const task = await pushDep.startAsync("a");
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 1,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        await pushDep.completeAsync(task);
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 1,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        expect.assertions(2);
     });
-  
-    fit('It should start then cancel a task', async () => {
-      await pushDep.pushAsync({
-        kindId: "a"
-      });
-  
-      const task = await pushDep.startAsync("a");
-  
-      let count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 1,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 1
-      });
-  
-      await pushDep.cancelAsync(task);
-  
-      count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 0,
-        completed: 0,
-        canceled: 1,
-        failed: 0,
-        all: 1
-      });
-  
-      expect.assertions(2);
+
+    it('It should start then cancel a task', async () => {
+        await pushDep.pushAsync({
+            kindId: "a"
+        });
+
+        const task = await pushDep.startAsync("a");
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 1,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        await pushDep.cancelAsync(task);
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 0,
+            canceled: 1,
+            failed: 0,
+            all: 1
+        });
+
+        expect.assertions(2);
     });
-  
-    fit('It should start then fail a task', async () => {
-      await pushDep.pushAsync({
-        kindId: "a"
-      });
-  
-      const task = await pushDep.startAsync("a");
-  
-      let count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 1,
-        completed: 0,
-        canceled: 0,
-        failed: 0,
-        all: 1
-      });
-  
-      await pushDep.failAsync(task);
-  
-      count = await pushDep.countAsync("a");
-      expect(count).toEqual({
-        pending: 0,
-        active: 0,
-        completed: 0,
-        canceled: 0,
-        failed: 1,
-        all: 1
-      });
-  
-      expect.assertions(2);
+
+    it('It should start then fail a task', async () => {
+        await pushDep.pushAsync({
+            kindId: "a"
+        });
+
+        const task = await pushDep.startAsync("a");
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 1,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        await pushDep.failAsync(task);
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 1,
+            all: 1
+        });
+
+        expect.assertions(2);
     });
-  
-    // it('It should start then repush or return a task', async () => {
-    //   const pushDep = new TypeORMPushDep();
-    //   await pushDep.pushAsync({
-    //     kind: "a"
-    //   });
-  
-    //   const task = await pushDep.startAsync("a");
-  
-    //   let count = await pushDep.countAsync("a");
-    //   expect(count).toEqual({
-    //     pending: 0,
-    //     active: 1,
-    //     completed: 0,
-    //     canceled: 0,
-    //     failed: 0,
-    //     all: 1
-    //   });
-  
-    //   await pushDep.pushAsync(task);
-  
-    //   count = await pushDep.countAsync("a");
-    //   expect(count).toEqual({
-    //     pending: 1,
-    //     active: 0,
-    //     completed: 0,
-    //     canceled: 0,
-    //     failed: 0,
-    //     all: 1
-    //   });
-  
-    //   expect.assertions(2);
-    // });
-    
-    // it('It should test kind concurrency', async () => {
-    //   let pushDep = new TypeORMPushDep();
-      
-    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //   for (const i in [1, 2, 3, 4]) {
-    //     await pushDep.pushAsync({ kind: "a" });
-    //     await pushDep.startAsync("a");
-    //   }
-  
-    //   let count = await pushDep.countAsync("a");
-    //   expect(count).toEqual({
-    //     pending: 0,
-    //     active: 4,
-    //     completed: 0,
-    //     canceled: 0,
-    //     failed: 0,
-    //     all: 4
-    //   });
-  
-    //   pushDep = new TypeORMPushDep();
-    //   await pushDep.setKindAsync({ kind: "a", concurrency: 3 });
-  
-    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //   for (const i in [1, 2, 3, 4]) {
-    //     await pushDep.pushAsync({ kind: "a" });
-    //     await pushDep.startAsync("a");
-    //   }
-  
-    //   count = await pushDep.countAsync("a");
-    //   expect(count).toEqual({
-    //     pending: 1,
-    //     active: 3,
-    //     completed: 0,
-    //     canceled: 0,
-    //     failed: 0,
-    //     all: 4
-    //   });
-  
-    //   expect.assertions(2);
-    // });
+
+    it('It should start then return a task', async () => {
+        await pushDep.pushAsync({
+            kindId: "a"
+        });
+
+        const task = await pushDep.startAsync("a");
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 1,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        await pushDep.returnAsync(task);
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 1,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        expect.assertions(2);
+    });
+
+    it('It should test kind concurrency', async () => {
+        const pushDep = new TypeORMPushDep(dataSource);
+        await pushDep.setKindAsync({ id: "a", concurrency: 3 });
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const i in [1, 2, 3, 4]) {
+            await pushDep.pushAsync({ kindId: "a" });
+            await pushDep.startAsync("a");
+        }
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 1,
+            active: 3,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 4
+        });
+
+        await pushDep.setKindAsync({ id: "a", concurrency: 4 });
+        await pushDep.startAsync("a");
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 4,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 4
+        });
+
+        expect.assertions(2);
+    });
 });

@@ -1,0 +1,198 @@
+import "dotenv/config";
+import { Kind } from "src/impl/typeorm/entity/Kind.entity";
+import { Task } from "src/impl/typeorm/entity/Task.entity";
+import { TaskExecution } from "src/impl/typeorm/entity/TaskExecution.entity";
+import { TypeORMPushDep } from "src/impl/typeorm/TypeORMPushDep";
+import { DataSource } from "typeorm";
+import { promisify } from "util";
+import { PushDep, PushDepTask } from "./PushDep";
+import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
+
+const sleep = promisify(setTimeout);
+
+let dataSource: DataSource;
+let pushDep: TypeORMPushDep;
+
+describe('Worker tests using TypeORM pushDep', () => {
+
+  beforeAll(async () => {
+    dataSource = new DataSource({
+      type: process.env.DB_TYPE as any,
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
+      extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
+      synchronize: true,
+      logging: true,
+      entities: [Kind, Task, TaskExecution],
+      migrations: [],
+      subscribers: [],
+    });
+    await dataSource.initialize();
+    pushDep = new TypeORMPushDep(dataSource);
+  });
+
+  afterAll(async () => {
+    await dataSource.destroy();
+  });
+
+  beforeEach(async () => {
+    await dataSource.manager.delete(TaskExecution, {});
+    await dataSource.manager.delete(Task, {});
+    await dataSource.manager.delete(Kind, {});
+    await pushDep.setKindAsync({ id: "a", concurrency: 3 });
+    await pushDep.setKindAsync({ id: "b", concurrency: 3 });
+  });
+
+  it('It should work ;-)', async () => {
+    const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+      console.log(`worker ${worker.id} treating task ${task.id}`);
+      await sleep(100);
+      await pushDep.completeAsync(task);
+    };
+
+    const workerOptionsA = new PushDepWorkerOptions();
+    workerOptionsA.kindId = "a";
+
+    const workerA = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerFunction);
+    workerA.startAsync();
+
+    const workerOptionsB = new PushDepWorkerOptions();
+    workerOptionsB.kindId = "b";
+
+    const workerB = new PushDepWorker(pushDep, workerOptionsB, consoleWorkerFunction);
+    workerB.startAsync();
+
+    await pushDep.pushAsync({ kindId: "a" });
+    await pushDep.pushAsync({ kindId: "a" });
+    await pushDep.pushAsync({ kindId: "a" });
+
+    await sleep(1000);
+
+    const count = await pushDep.countAsync("a");    
+    expect(count).toEqual({
+      pending: 0,
+      active: 0,
+      completed: 3,
+      canceled: 0,
+      failed: 0,
+      all: 3
+    });
+
+    await workerA.stopAsync();
+    await workerB.stopAsync();
+
+    await sleep(1000);
+
+    expect.assertions(1);
+  }, 20000);
+
+  fit('It should execute a hierarchical job using multiple workers', async () => {
+    const start = new Date().getTime();
+
+    let numberOfTasks = 6;
+
+    const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+      console.log(`worker ${worker.id} treating task ${task.id}`);
+      await sleep(10);
+      await pushDep.completeAsync(task);
+      numberOfTasks--;
+    };
+
+    const worker1 = new PushDepWorker(pushDep, {
+      kindId: "a",
+      idleTimeoutMs: 100
+    }, consoleWorkerFunction);
+    worker1.startAsync();
+
+    const worker2 = new PushDepWorker(pushDep, {
+      kindId: "a",
+      idleTimeoutMs: 100
+    }, consoleWorkerFunction);
+    worker2.startAsync();
+
+    const worker3 = new PushDepWorker(pushDep, {
+      kindId: "b",
+      idleTimeoutMs: 100
+    }, consoleWorkerFunction);
+    worker3.startAsync();
+
+    const task0 = await pushDep.pushAsync({ kindId: "a" });
+    const task1 = await pushDep.pushAsync({ kindId: "a" });
+    const task2 = await pushDep.pushAsync({ kindId: "a" });
+    const task3 = await pushDep.pushAsync({ kindId: "b", dependencies: [task0, task1] });
+    const task4 = await pushDep.pushAsync({ kindId: "b", dependencies: [task0, task2] });
+    await pushDep.pushAsync({ kindId: "a", dependencies: [task3, task4] });
+
+    while (numberOfTasks) {
+      await sleep(10);
+    }
+
+    let count = await pushDep.countAsync("a");
+    console.log(count);
+    expect(count).toEqual({
+      pending: 0,
+      active: 0,
+      completed: 4,
+      canceled: 0,
+      failed: 0,
+      all: 4
+    });
+
+    count = await pushDep.countAsync("b");
+    console.log(count);
+    expect(count).toEqual({
+      pending: 0,
+      active: 0,
+      completed: 2,
+      canceled: 0,
+      failed: 0,
+      all: 2
+    });
+
+    await worker1.stopAsync();
+    await worker2.stopAsync();
+    await worker3.stopAsync();
+
+    await sleep(10);
+
+    expect.assertions(2);
+
+    console.log(`executed in ${new Date().getTime() - start} ms`);
+  }, 10000);
+
+  it('It should execute a simple dummy demo', async () => {
+    const executionPath = [];
+
+    const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+      executionPath.push(task.id);
+      await pushDep.completeAsync(task);
+    };
+
+    const workerFoo = new PushDepWorker(pushDep, { kindId: "foo", idleTimeoutMs: 100 }, workerFunction);
+    workerFoo.startAsync();
+
+    const workerBar = new PushDepWorker(pushDep, { kindId: "bar", idleTimeoutMs: 100 }, workerFunction);
+    workerBar.startAsync();
+
+    const task0 = await pushDep.pushAsync({ kindId: "foo" });
+    const task1 = await pushDep.pushAsync({ kindId: "foo" });
+    const task2 = await pushDep.pushAsync({ kindId: "foo" });
+    const task3 = await pushDep.pushAsync({ kindId: "bar", dependencies: [ task0, task1 ] });
+    const task4 = await pushDep.pushAsync({ kindId: "bar", dependencies: [ task0, task2 ] });
+    await pushDep.pushAsync({ kindId: "foo", dependencies: [ task3, task4 ] });
+
+    await sleep(1000);
+
+    await workerFoo.stopAsync();
+    await workerBar.stopAsync();
+
+    await sleep(1000);
+
+    expect(executionPath.join("")).toBe("123456");
+    expect.assertions(1);
+  });
+});

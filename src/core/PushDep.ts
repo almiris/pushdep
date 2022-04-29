@@ -70,4 +70,5 @@ export interface PushDep {
     completeAsync(task: PushDepTask): Promise<void>;
     cancelAsync(task: PushDepTask): Promise<void>;
     failAsync(task: PushDepTask): Promise<void>;
+    returnAsync(task: PushDepTask): Promise<void>;
 }

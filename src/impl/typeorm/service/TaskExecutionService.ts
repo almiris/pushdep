@@ -1,5 +1,6 @@
 import { PushDepExecutionState, PushDepTaskCount } from "src/core/PushDep";
 import { Repository } from "typeorm";
+import { Task } from "../entity/Task.entity";
 import { TaskExecution } from "../entity/TaskExecution.entity";
 import { GenericService } from "../helper/GenericService";
 
@@ -45,6 +46,44 @@ export class TaskExecutionService extends GenericService<TaskExecution> {
             canceled: 0,
             failed: 0,
             all: 0
+        });
+    }
+
+    async startAsync(taskId: string) {
+        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+            state: PushDepExecutionState.active, 
+            startedAt: new Date() 
+        });
+    }
+
+    async completeAsync(taskId: string) {
+        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+            state: PushDepExecutionState.completed, 
+            completedAt: new Date() 
+        });
+    }
+
+    async cancelAsync(taskId: string) {
+        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+            state: PushDepExecutionState.canceled, 
+            canceledAt: new Date() 
+        });
+    }
+
+    async failAsync(taskId: string) {
+        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+            state: PushDepExecutionState.failed, 
+            failedAt: new Date() 
+        });
+    }
+
+    async returnAsync(taskId: string) {
+        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+            state: PushDepExecutionState.pending, 
+            startedAt: null,
+            completedAt: null,
+            canceledAt: null,
+            failedAt: null
         });
     }
 }

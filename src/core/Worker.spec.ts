@@ -1,11 +1,11 @@
-import { InMemoryPushDep } from "src/core/InMemoryPushDep";
+import { InMemoryPushDep } from "src/impl/inmemory/InMemoryPushDep";
 import { promisify } from "util";
 import { PushDep, PushDepTask } from "./PushDep";
 import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
 
 const sleep = promisify(setTimeout);
 
-describe('Worker tests', () => {
+describe('Worker tests using in-memory pushDep', () => {
 
   // beforeEach(async () => {});
 
@@ -19,13 +19,13 @@ describe('Worker tests', () => {
     };
 
     const workerOptionsA = new PushDepWorkerOptions();
-    workerOptionsA.kind = "a";
+    workerOptionsA.kindId = "a";
     
     const workerA = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerFunction);
     workerA.startAsync();
 
     const workerOptionsB = new PushDepWorkerOptions();
-    workerOptionsB.kind = "b";
+    workerOptionsB.kindId = "b";
     
     const workerB = new PushDepWorker(pushDep, workerOptionsB, consoleWorkerFunction);
     workerB.startAsync();
