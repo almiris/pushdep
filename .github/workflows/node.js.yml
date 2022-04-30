@@ -27,14 +27,14 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: |
-      echo "DB_TYPE=postgres" > .env
-      echo "DB_HOST=${{ secrets.db_host }}" >> .env
-      echo "DB_PORT=5432" >> .env
-      echo "DB_USERNAME=${{ secrets.db_username }}" >> .env
-      echo "DB_PASSWORD=${{ secrets.db_password }}" >> .env
-      echo "DB_NAME=${{ secrets.db_username }}" >> .env
-      echo "DB_SSL=" >> .env
-      echo 'DB_EXTRA={ "max": 4 }' >> .env
-      npm ci
-      npm run build --if-present
-      npm test
+        echo "DB_TYPE=postgres" > .env
+        echo "DB_HOST=${{ secrets.db_host }}" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_USERNAME=${{ secrets.db_username }}" >> .env
+        echo "DB_PASSWORD=${{ secrets.db_password }}" >> .env
+        echo "DB_NAME=${{ secrets.db_username }}" >> .env
+        echo "DB_SSL=" >> .env
+        echo 'DB_EXTRA={ "max": 4 }' >> .env
+        npm ci
+        npm run build --if-present
+        npm test
