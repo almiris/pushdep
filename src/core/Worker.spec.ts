@@ -229,4 +229,4 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         expect(["012345", "013245"]).toContain(executionPath.join(""));
         expect.assertions(1);
     });
-});
+}, 60000);
