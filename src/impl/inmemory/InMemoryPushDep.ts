@@ -21,7 +21,7 @@ interface InMemoryTask extends PushDepTask {
     id: string;
 }
 
-class InMemoryTasks {
+class InMemoryTaskService {
     kinds: KindsMappedByKind = {};
     pendingTasks: TasksMappedByPriority = {};
     activeTasks: TasksMappedByPriority = {};
@@ -38,7 +38,7 @@ class InMemoryTasks {
         return this.kinds[kindId] || null;
     }
     
-    push(task: PushDepTask): void {
+    push(task: PushDepTask): PushDepTask {
         const taskExecution = this.allTasks[task.id];
         if (!taskExecution) {
             task.priority = task.priority || 1;
@@ -60,6 +60,7 @@ class InMemoryTasks {
                 taskExecution.task = task;
             }
         }
+        return task; // TODO check this
     }
 
     pushByPriority(taskExecution: PushDepTaskExecution, tasks: TasksMappedByPriority): void {
@@ -101,15 +102,15 @@ class InMemoryTasks {
             for (const priority of prioritiesDesc) {
                 const tasksForPriorityAndKind: PushDepTaskExecution[] = tasks[priority][kindId];
                 if (tasksForPriorityAndKind) {
-                    const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
-                    || taskExecution.task.dependencies.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
-                    if (index !== -1) {
-                        const task = tasksForPriorityAndKind[index];
-                        if (pop) {
-                            tasksForPriorityAndKind.splice(index, 1);
-                        }
-                        return task;
-                    }
+                    // const index = tasksForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
+                    // || taskExecution.task.dependencies.every(id => !this.allTasks[id] || (this.allTasks[id].state !== PushDepExecutionState.pending && this.allTasks[id].state !== PushDepExecutionState.active)));
+                    // if (index !== -1) {
+                    //     const task = tasksForPriorityAndKind[index];
+                    //     if (pop) {
+                    //         tasksForPriorityAndKind.splice(index, 1);
+                    //     }
+                    //     return task;
+                    // }
                 }
             }
         }
@@ -139,6 +140,11 @@ class InMemoryTasks {
 
     fail(task: PushDepTask): void {
         this.changeTaskState(task, PushDepExecutionState.failed);
+    }
+
+    return(task: PushDepTask): void {
+        this.changeTaskState(task, PushDepExecutionState.pending);
+        // TODO also change all dates
     }
 
     /**
@@ -199,44 +205,47 @@ class InMemoryTasks {
 }
 
 export class InMemoryPushDep implements PushDep {
-    tasks: InMemoryTasks = new InMemoryTasks();
+    inMemoryTaskService: InMemoryTaskService = new InMemoryTaskService();
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        this.tasks.setKind(kind);
+        this.inMemoryTaskService.setKind(kind);
     }
 
     async getKindAsync(kindId: string): Promise<PushDepKind> {
-        return this.tasks.getKind(kindId);
+        return this.inMemoryTaskService.getKind(kindId);
     }
 
-    async pushAsync(task: PushDepTask): Promise<string> {
+    async pushAsync(task: PushDepTask): Promise<PushDepTask> {
         const inMemoryTask = task as InMemoryTask;
         inMemoryTask.id = inMemoryTask.id || uuidv4();
-        this.tasks.push(inMemoryTask);
-        return inMemoryTask.id;
+        return this.inMemoryTaskService.push(inMemoryTask);
     }
 
     async countAsync(kindId: string): Promise<PushDepTaskCount> {
-        return this.tasks.count(kindId);
+        return this.inMemoryTaskService.count(kindId);
     }
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
-        return this.tasks.peek(kindId);
+        return this.inMemoryTaskService.peek(kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        return this.tasks.start(kindId);
+        return this.inMemoryTaskService.start(kindId);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.complete(task);
+        return this.inMemoryTaskService.complete(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.cancel(task);
+        return this.inMemoryTaskService.cancel(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        return this.tasks.fail(task);
+        return this.inMemoryTaskService.fail(task);
+    }
+
+    async returnAsync(task: PushDepTask): Promise<void> {
+        return this.inMemoryTaskService.return(task);
     }
 }

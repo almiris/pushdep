@@ -24,30 +24,30 @@ export class Kind implements PushDepKind {
         name: "created_at",
         type: "timestamp with time zone",
         nullable: false,
-      })
-      createdAt: Date;
-    
-      @UpdateDateColumn({
+    })
+    createdAt: Date;
+
+    @UpdateDateColumn({
         name: "updated_at",
         type: "timestamp with time zone",
         nullable: false,
-      })
-      updatedAt: Date;
-    
-      @DeleteDateColumn({
+    })
+    updatedAt: Date;
+
+    @DeleteDateColumn({
         name: "deleted_at",
         type: "timestamp with time zone",
         nullable: true
-      })
-      deletedAt: Date;
-    
-      @VersionColumn({
+    })
+    deletedAt: Date;
+
+    @VersionColumn({
         name: "version",
         type: "int",
         nullable: false
-      })
-      version: number;    
+    })
+    version: number;
 
-      @OneToMany(() => Task, task => task.kind)
-      tasks: Promise<Task[]>;
+    @OneToMany(() => Task, task => task.kind)
+    tasks: Promise<Task[]>;
 }

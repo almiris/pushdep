@@ -1,9 +1,9 @@
 import { PushDepExecutionState, PushDepTask } from "src/core/PushDep";
 import { Repository } from "typeorm";
 import { Task } from "../entity/Task.entity";
-import { GenericService } from "../helper/GenericService";
+import { GenericRepository } from "../helper/GenericRepository";
 
-export class TaskService extends GenericService<Task> {
+export class TaskRepository extends GenericRepository<Task> {
     constructor(private taskRepository: Repository<Task>) {
         super(taskRepository);
     }
