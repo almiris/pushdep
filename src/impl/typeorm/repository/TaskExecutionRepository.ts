@@ -2,14 +2,14 @@ import { PushDepExecutionState, PushDepTaskCount } from "src/core/PushDep";
 import { Repository } from "typeorm";
 import { Task } from "../entity/Task.entity";
 import { TaskExecution } from "../entity/TaskExecution.entity";
-import { GenericService } from "../helper/GenericService";
+import { GenericRepository } from "../helper/GenericRepository";
 
 interface Count { 
     state: number; 
     count: number 
 }
 
-export class TaskExecutionService extends GenericService<TaskExecution> {
+export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
     constructor(private taskExecutionRepository: Repository<TaskExecution>) {
         super(taskExecutionRepository);
     }

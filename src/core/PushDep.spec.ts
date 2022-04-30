@@ -1,43 +1,65 @@
 import "dotenv/config";
+import { InMemoryPushDep } from "src/impl/inmemory/InMemoryPushDep";
 import { TypeORMPushDep } from "src/impl/typeorm/TypeORMPushDep";
 import { DataSource } from "typeorm";
-import { Kind } from "./entity/Kind.entity";
-import { Task } from "./entity/Task.entity";
-import { TaskExecution } from "./entity/TaskExecution.entity";
+import { Kind } from "src/impl/typeorm/entity/Kind.entity";
+import { Task } from "src/impl/typeorm/entity/Task.entity";
+import { TaskExecution } from "src/impl/typeorm/entity/TaskExecution.entity";
+import { PushDep } from "./PushDep";
 
 let dataSource: DataSource;
-let pushDep: TypeORMPushDep;
+let pushDep: PushDep;
 
-describe('TypeORMPushDep tests', () => {
+const pushDepClassCLIArg: string = process.argv.map(arg => arg.startsWith("--pushDepClass=") ? arg.substring("--pushDepClass=".length) : null).filter(arg => arg)[0];
+
+const PUSHDEP_CLASSES = {
+    "InMemoryPushDep": InMemoryPushDep,
+    "TypeORMPushDep": TypeORMPushDep
+};
+
+describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
+  pushDepClass: "InMemoryPushDep"
+}, {
+  pushDepClass: "TypeORMPushDep"
+}])('PushDep tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
     beforeAll(async () => {
-        dataSource = new DataSource({
-            type: process.env.DB_TYPE as any,
-            host: process.env.DB_HOST,
-            port: Number(process.env.DB_PORT),
-            username: process.env.DB_USERNAME,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
-            extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
-            synchronize: true,
-            logging: true,
-            entities: [Kind, Task, TaskExecution],
-            migrations: [],
-            subscribers: [],
-        });
-        await dataSource.initialize();
-        pushDep = new TypeORMPushDep(dataSource);
+        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
+            dataSource = new DataSource({
+                type: process.env.DB_TYPE as any,
+                host: process.env.DB_HOST,
+                port: Number(process.env.DB_PORT),
+                username: process.env.DB_USERNAME,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME,
+                ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
+                extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
+                synchronize: true,
+                logging: true,
+                entities: [Kind, Task, TaskExecution],
+                migrations: [],
+                subscribers: [],
+            });
+            await dataSource.initialize();
+            pushDep = new TypeORMPushDep(dataSource);
+        }
     });
 
     afterAll(async () => {
-        await dataSource.destroy();
+        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
+            await dataSource.destroy();
+        }
     });
 
     beforeEach(async () => {
-        await dataSource.manager.delete(TaskExecution, {});
-        await dataSource.manager.delete(Task, {});
-        await dataSource.manager.delete(Kind, {});
+        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
+            await dataSource.manager.delete(TaskExecution, {});
+            await dataSource.manager.delete(Task, {});
+            await dataSource.manager.delete(Kind, {});
+        }
+        else if (PUSHDEP_CLASSES[pushDepClass] === InMemoryPushDep) {
+            pushDep = new InMemoryPushDep();
+        }
         await pushDep.setKindAsync({ id: "a", concurrency: 3 });
     });
 
@@ -321,7 +343,6 @@ describe('TypeORMPushDep tests', () => {
     });
 
     it('It should test kind concurrency', async () => {
-        const pushDep = new TypeORMPushDep(dataSource);
         await pushDep.setKindAsync({ id: "a", concurrency: 3 });
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

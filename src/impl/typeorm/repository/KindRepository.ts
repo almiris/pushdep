@@ -1,9 +1,9 @@
 import { PushDepKind } from "src/core/PushDep";
 import { Repository } from "typeorm";
 import { Kind } from "../entity/Kind.entity";
-import { GenericService } from "../helper/GenericService";
+import { GenericRepository } from "../helper/GenericRepository";
 
-export class KindService extends GenericService<Kind> {
+export class KindRepository extends GenericRepository<Kind> {
     constructor(private kindRepository: Repository<Kind>) {
         super(kindRepository);
     }
