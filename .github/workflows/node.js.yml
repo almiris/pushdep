@@ -33,7 +33,7 @@ jobs:
     - run: echo "DB_PASSWORD=${{ secrets.db_password }}" >> .env
     - run: echo "DB_NAME=${{ secrets.db_username }}" >> .env
     - run: echo "DB_SSL=" >> .env
-    - run: echo "DB_EXTRA=" >> .env
+    - run: echo 'DB_EXTRA={ "max": 4 }' >> .env
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
