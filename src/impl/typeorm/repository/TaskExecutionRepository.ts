@@ -15,11 +15,11 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
     }
 
     async findByTaskIdAsync(id: string): Promise<TaskExecution> {
-        return (await this.taskExecutionRepository.findOne({
+        return await this.taskExecutionRepository.findOne({
             where: {
                 taskId: id
             }
-        }))[0] || null;
+        });
     }
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
