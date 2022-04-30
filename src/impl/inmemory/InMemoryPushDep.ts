@@ -192,8 +192,6 @@ class InMemoryTaskExecutionService {
                 taskExecution.failedAt = new Date();
                 this.doPushMappedByTaskKindMappedByTaskId(taskExecution, this.failedTaskExecutions);
                 break;
-            default:
-                throw new Error(`Incorrect task state: ${state}`);
         }
     }
 
