@@ -141,10 +141,20 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
     });
 
     it('It should count tasks', async () => {
-        await pushDep.pushAsync({ kindId: "a" });
-        await pushDep.pushAsync({ kindId: "a" });
-        await pushDep.pushAsync({ kindId: "a" });
         let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 0
+        });
+
+        await pushDep.pushAsync({ kindId: "a" });
+        await pushDep.pushAsync({ kindId: "a" });
+        await pushDep.pushAsync({ kindId: "a" });
+        count = await pushDep.countAsync("a");
 
         expect(count).toEqual({
             pending: 3,
@@ -179,7 +189,7 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
             all: 0
         });
 
-        expect.assertions(3);
+        expect.assertions(4);
     });
 
     it('It should peek nothing', async () => {

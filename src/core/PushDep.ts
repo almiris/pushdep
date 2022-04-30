@@ -31,6 +31,11 @@ export enum PushDepExecutionState {
     failed = 5
 }
 
+export const AllowedStateTransitions: Partial<Record<PushDepExecutionState, PushDepExecutionState[]>> = {
+    [PushDepExecutionState.pending]: [ PushDepExecutionState.active ],
+    [PushDepExecutionState.active]: [ PushDepExecutionState.pending, PushDepExecutionState.completed, PushDepExecutionState.canceled, PushDepExecutionState.failed]
+}
+
 export interface PushDepTaskCount {
     pending: number;
     active: number;

@@ -69,10 +69,12 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
     });
 
     it('It should work ;-)', async () => {
+        let numberOfTasks = 3;
         const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
             console.log(`worker ${worker.id} treating task ${task.id}`);
             await sleep(100);
             await pushDep.completeAsync(task);
+            numberOfTasks--;
         };
 
         const workerOptionsA = new PushDepWorkerOptions();
@@ -91,7 +93,9 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await pushDep.pushAsync({ kindId: "a" });
         await pushDep.pushAsync({ kindId: "a" });
 
-        await sleep(1000);
+        while (numberOfTasks) {
+            await sleep(10);
+        }
 
         const count = await pushDep.countAsync("a");
         expect(count).toEqual({
@@ -106,10 +110,11 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await workerA.stopAsync();
         await workerB.stopAsync();
 
-        await sleep(1000);
+        await workerA.waitForTermination();
+        await workerB.waitForTermination();
 
         expect.assertions(1);
-    }, 20000);
+    });
 
     it('It should execute a hierarchical job using multiple workers', async () => {
         const start = new Date().getTime();
@@ -153,7 +158,6 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         }
 
         let count = await pushDep.countAsync("a");
-        console.log(count);
         expect(count).toEqual({
             pending: 0,
             active: 0,
@@ -164,7 +168,6 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         });
 
         count = await pushDep.countAsync("b");
-        console.log(count);
         expect(count).toEqual({
             pending: 0,
             active: 0,
@@ -178,7 +181,9 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await worker2.stopAsync();
         await worker3.stopAsync();
 
-        await sleep(10);
+        await worker1.waitForTermination();
+        await worker2.waitForTermination();
+        await worker3.waitForTermination();
 
         expect.assertions(2);
 
@@ -189,11 +194,13 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await pushDep.setKindAsync({ id: "foo", concurrency: 3 });
         await pushDep.setKindAsync({ id: "bar", concurrency: 3 });
 
+        let numberOfTasks = 6;
         const executionPath = [];
 
         const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
             executionPath.push(task.args.step);
             await pushDep.completeAsync(task);
+            numberOfTasks--;
         };
 
         const workerFoo = new PushDepWorker(pushDep, { kindId: "foo", idleTimeoutMs: 10 }, workerFunction);
@@ -209,12 +216,15 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         const task4 = await pushDep.pushAsync({ kindId: "bar", args: { step: 4 }, dependencies: [task0, task2] });
         await pushDep.pushAsync({ kindId: "foo", args: { step: 5 }, dependencies: [task3, task4] });
 
-        await sleep(200);
+        while (numberOfTasks) {
+            await sleep(10);
+        }
 
         await workerFoo.stopAsync();
         await workerBar.stopAsync();
 
-        await sleep(200);
+        await workerFoo.waitForTermination();
+        await workerBar.waitForTermination();
 
         expect(["012345", "013245"]).toContain(executionPath.join(""));
         expect.assertions(1);
