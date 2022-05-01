@@ -385,5 +385,5 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         });
 
         expect.assertions(2);
-    });
+    }, 10000);
 }, 60000);
