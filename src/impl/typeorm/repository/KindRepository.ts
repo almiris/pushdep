@@ -9,7 +9,7 @@ export class KindRepository extends GenericRepository<Kind> {
     }
 
     async findAsync(kindId: string): Promise<PushDepKind> {
-        return (await this.kindRepository.find({
+        return await this.kindRepository.findOne({
             select: {
                 id: true,
                 concurrency : true
@@ -17,6 +17,6 @@ export class KindRepository extends GenericRepository<Kind> {
             where: {
                 id: kindId
             }
-        }))[0] || null;
+        });
     }
 }

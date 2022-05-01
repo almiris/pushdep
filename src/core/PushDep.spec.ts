@@ -165,7 +165,7 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
             all: 3
         });
 
-        pushDep.setKindAsync({ id: "b", concurrency: 1 });
+        await pushDep.setKindAsync({ id: "b", concurrency: 1 });
         await pushDep.pushAsync({ kindId: "b" });
         count = await pushDep.countAsync("b");
 
