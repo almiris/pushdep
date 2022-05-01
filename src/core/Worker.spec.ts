@@ -114,7 +114,7 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await workerB.waitForTerminationAsync();
 
         expect.assertions(1);
-    });
+    }, 10000);
 
     it('It should execute a hierarchical job using multiple workers', async () => {
         const start = new Date().getTime();
@@ -228,5 +228,5 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
 
         expect(["012345", "013245"]).toContain(executionPath.join(""));
         expect.assertions(1);
-    });
+    }, 10000);
 }, 60000);
