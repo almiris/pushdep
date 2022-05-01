@@ -39,7 +39,7 @@ export class PushDepWorker {
         this.isRunning = false;
     }
 
-    async waitForTermination(): Promise<void> {
+    async waitForTerminationAsync(): Promise<void> {
         while (!this.isTerminated) {
             await sleep(10);
         }

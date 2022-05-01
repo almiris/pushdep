@@ -209,7 +209,7 @@ class InMemoryTaskExecutionService {
 
 export class InMemoryPushDep implements PushDep {
     inMemoryTaskExecutionService: InMemoryTaskExecutionService = new InMemoryTaskExecutionService();
-    
+
     async setKindAsync(kind: PushDepKind): Promise<void> {
         this.inMemoryTaskExecutionService.setKind(kind);
     }
@@ -235,18 +235,18 @@ export class InMemoryPushDep implements PushDep {
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        return this.inMemoryTaskExecutionService.complete(task);
+        this.inMemoryTaskExecutionService.complete(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        return this.inMemoryTaskExecutionService.cancel(task);
+        this.inMemoryTaskExecutionService.cancel(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        return this.inMemoryTaskExecutionService.fail(task);
+        this.inMemoryTaskExecutionService.fail(task);
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        return this.inMemoryTaskExecutionService.return(task);
+        this.inMemoryTaskExecutionService.return(task);
     }
 }

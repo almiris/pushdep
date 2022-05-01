@@ -28,7 +28,7 @@ class TypeORMTaskExecutionService {
     }
     
     async pushAsync(task: PushDepTask): Promise<PushDepTask> {
-        return await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
+        return await this.dataSource.transaction<Task>(async (transactionalEntityManager: EntityManager): Promise<Task> => {
             const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
             const taskExecutionRepository = new TaskExecutionRepository(transactionalEntityManager.getRepository(TaskExecution));
             return await this.doPushAsync(taskRepository, taskExecutionRepository, task);
@@ -67,10 +67,10 @@ class TypeORMTaskExecutionService {
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        return await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
+        return await this.dataSource.transaction<Task>(async (transactionalEntityManager: EntityManager): Promise<Task> => {
             const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
             const taskExecutionRepository = new TaskExecutionRepository(transactionalEntityManager.getRepository(TaskExecution));
-            let task: PushDepTask = null;
+            let task: Task = null;
             const kindRepository = new KindRepository(transactionalEntityManager.getRepository(Kind));
             const concurrency = (await kindRepository.findAsync(kindId))?.concurrency || 1;
             if (await taskRepository.countActiveTasks(kindId) < concurrency) {
@@ -146,18 +146,18 @@ export class TypeORMPushDep implements PushDep {
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        return await this.typeORMTaskExecutionService.completeAsync(task);
+        await this.typeORMTaskExecutionService.completeAsync(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        return await this.typeORMTaskExecutionService.cancelAsync(task);
+        await this.typeORMTaskExecutionService.cancelAsync(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        return await this.typeORMTaskExecutionService.failAsync(task);
+        await this.typeORMTaskExecutionService.failAsync(task);
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        return await this.typeORMTaskExecutionService.returnAsync(task);
+        await this.typeORMTaskExecutionService.returnAsync(task);
     }
 }

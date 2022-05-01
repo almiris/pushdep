@@ -1,7 +1,7 @@
 {
    "name": "pushdep",
    "version": "1.0.0",
-   "description": "",
+   "description": "A concurrent executor for hierarchical tasks (tasks that *depend* on other tasks). It can also be used as a message queue, a workflow engine or a process manager.",
    "scripts": {
       "start": "ts-node src/index.ts",
       "typeorm": "typeorm-ts-node-commonjs",
@@ -9,12 +9,12 @@
       "format": "",
       "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
       "test": "jest --runInBand",
-      "test:watch": "jest --watch",
+      "test:watch": "jest --watch --runInBand",
       "test:cov": "jest --runInBand --coverage",
       "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
    },
-   "keywords": [],
-   "author": "",
+   "keywords": ["executor", "concurrent executor", "task executor", "task", "job", "message queue", "queue", "workflow", "process", "process manager", "nodejs", "node", "typescript", "dependency"],
+   "author": "Almiris",
    "license": "ISC",
    "dependencies": {
       "uuid": "^8.3.2"

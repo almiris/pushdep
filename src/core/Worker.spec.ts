@@ -110,8 +110,8 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await workerA.stopAsync();
         await workerB.stopAsync();
 
-        await workerA.waitForTermination();
-        await workerB.waitForTermination();
+        await workerA.waitForTerminationAsync();
+        await workerB.waitForTerminationAsync();
 
         expect.assertions(1);
     });
@@ -181,9 +181,9 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await worker2.stopAsync();
         await worker3.stopAsync();
 
-        await worker1.waitForTermination();
-        await worker2.waitForTermination();
-        await worker3.waitForTermination();
+        await worker1.waitForTerminationAsync();
+        await worker2.waitForTerminationAsync();
+        await worker3.waitForTerminationAsync();
 
         expect.assertions(2);
 
@@ -223,8 +223,8 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await workerFoo.stopAsync();
         await workerBar.stopAsync();
 
-        await workerFoo.waitForTermination();
-        await workerBar.waitForTermination();
+        await workerFoo.waitForTerminationAsync();
+        await workerBar.waitForTerminationAsync();
 
         expect(["012345", "013245"]).toContain(executionPath.join(""));
         expect.assertions(1);
