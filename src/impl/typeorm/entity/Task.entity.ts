@@ -1,15 +1,17 @@
-import { PushDep, PushDepTask } from "src/core/PushDep";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, Generated, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from "typeorm";
+import { PushDepTask } from "src/core/PushDep";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, Generated, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Kind } from "./Kind.entity";
 import { TaskExecution } from "./TaskExecution.entity";
 
-@Entity()
+@Entity({
+    name: "task"
+})
 export class Task implements PushDepTask {
-
     @PrimaryColumn({
         name: "id",
-        type: "uuid"
-      })
+        type: "uuid",
+        comment: "Id of the task"
+    })
     @Generated("uuid")
     id: string;
 
@@ -41,6 +43,7 @@ export class Task implements PushDepTask {
         name: "created_at",
         type: "timestamp with time zone",
         nullable: false,
+        comment: "Timestamp that tracks when the task is pushed"
     })
     createdAt: Date;
     
@@ -48,53 +51,59 @@ export class Task implements PushDepTask {
         name: "updated_at",
         type: "timestamp with time zone",
         nullable: false,
+        comment: "Timestamp that tracks when the task is updated"
     })
     updatedAt: Date;
     
     @DeleteDateColumn({
         name: "deleted_at",
         type: "timestamp with time zone",
-        nullable: true
+        nullable: true,
+        comment: "Timestamp that tracks when the task is deleted"
     })
     deletedAt: Date;
     
     @VersionColumn({
         name: "version",
         type: "int",
-        nullable: false
+        nullable: false,
+        default: 0,
+        comment: "Version of the task - used for optimistic locking"
     })
     version: number;       
 
     @Column({
         name: "kind_id",
-        nullable: false
+        type: "text",
+        nullable: false,
+        comment: "The task's kind"
     })
     kindId: string;
     
     @ManyToOne(() => Kind, kind => kind.tasks, {
-        nullable: true
+        nullable: false
     })
     @JoinColumn({ name: "kind_id" })
     kind: Kind;    
 
-    @ManyToMany(() => Task)
+    @ManyToMany(() => Task, { nullable: true })
     @JoinTable({
-        name: "task_dependencies",
+        name: "task_dependency",
         joinColumn: {
-            name: "task",
+            name: "task_id",
             referencedColumnName: "id"
         },
         inverseJoinColumn: {
-            name: "dependency",
+            name: "dependency_id",
             referencedColumnName: "id"
         }
     })
     dependencies: Task[];
 
-    @ManyToMany(() => Task, task => task.dependencies)
+    @ManyToMany(() => Task, task => task.dependencies, { nullable: true })
     dependents: Task[];
 
     // as of now, we have only one execution per task
-    @OneToMany(() => TaskExecution, taskExecution => taskExecution.task)
+    @OneToMany(() => TaskExecution, taskExecution => taskExecution.task, { nullable: false })
     taskExecutions: TaskExecution[];
 }

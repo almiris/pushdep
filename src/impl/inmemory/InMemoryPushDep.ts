@@ -208,45 +208,45 @@ class InMemoryTaskExecutionService {
 }
 
 export class InMemoryPushDep implements PushDep {
-    inMemoryTaskExecutionService: InMemoryTaskExecutionService = new InMemoryTaskExecutionService();
+    taskExecutionService: InMemoryTaskExecutionService = new InMemoryTaskExecutionService();
 
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        this.inMemoryTaskExecutionService.setKind(kind);
+        this.taskExecutionService.setKind(kind);
     }
 
     async getKindAsync(kindId: string): Promise<PushDepKind> {
-        return this.inMemoryTaskExecutionService.getKind(kindId);
+        return this.taskExecutionService.getKind(kindId);
     }
 
     async pushAsync(task: PushDepTask): Promise<PushDepTask> {
-        return this.inMemoryTaskExecutionService.push(task);
+        return this.taskExecutionService.push(task);
     }
 
     async countAsync(kindId: string): Promise<PushDepTaskCount> {
-        return this.inMemoryTaskExecutionService.count(kindId);
+        return this.taskExecutionService.count(kindId);
     }
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
-        return this.inMemoryTaskExecutionService.peek(kindId);
+        return this.taskExecutionService.peek(kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        return this.inMemoryTaskExecutionService.start(kindId);
+        return this.taskExecutionService.start(kindId);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        this.inMemoryTaskExecutionService.complete(task);
+        this.taskExecutionService.complete(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        this.inMemoryTaskExecutionService.cancel(task);
+        this.taskExecutionService.cancel(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        this.inMemoryTaskExecutionService.fail(task);
+        this.taskExecutionService.fail(task);
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        this.inMemoryTaskExecutionService.return(task);
+        this.taskExecutionService.return(task);
     }
 }
