@@ -86,6 +86,8 @@ in memory storage; or TTL, or parent counter (to supported multiple unrelated pa
 - auto delete on complete / failed / cancel? (or we leave this to the worker providing methods to delete / remove a task and its dependencies). May be enough for inmemory, not for db (in case of a crash of the worker while executing a task, or a page reload, of a connection loss). for db, we need to ensure
 that the task will be completed and/or cleaned. this could be the role of a dedicated worker using
 a max execution time; if now - last state time > max execution time, then clean(kind) would return the task that could then be returned (to pending) or deleted. The worker is should be written in the task allowing the worker to control if it still owns the task when it try to update the task (a slow worker could have lost the ownership of the task)
+- Worker auto stop - worker would automatically stop as soon as their is no more task of the worker's kind available
+- Add indexes (for example, taskexecution.state, task.priority)
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
