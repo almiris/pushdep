@@ -9,6 +9,6 @@ export class KindRepository extends GenericRepository<Kind> {
     }
 
     async findAsync(kindId: string): Promise<PushDepKind> {
-        return await Kind.findByPk(kindId, { attributes: [ "id", "concurrency" ], raw: true });
+        return this.kindRepository.findByPk(kindId, { attributes: [ "id", "concurrency" ], raw: true });
     }
 }

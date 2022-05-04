@@ -32,8 +32,6 @@
    "author": "Almiris",
    "license": "ISC",
    "dependencies": {
-      "sequelize": "^6.19.0",
-      "sequelize-typescript": "^2.1.3",
       "uuid": "^8.3.2"
    },
    "devDependencies": {
@@ -47,6 +45,8 @@
       "jest": "^27.5.1",
       "pg": "^8.7.3",
       "reflect-metadata": "^0.1.13",
+      "sequelize": "^6.19.0",
+      "sequelize-typescript": "^2.1.3",
       "ts-jest": "^27.1.4",
       "ts-node": "10.7.0",
       "tsconfig-paths": "^3.14.1",
