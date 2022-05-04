@@ -60,6 +60,6 @@ export class Kind extends Model implements PushDepKind {
     })
     version: number;
 
-    @HasMany(() => Task, "taskId")
+    @HasMany(() => Task)
     tasks: Task[];
 }

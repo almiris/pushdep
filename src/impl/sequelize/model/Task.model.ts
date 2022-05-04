@@ -89,7 +89,7 @@ export class Task extends Model implements PushDepTask {
     })
     kindId: string;
     
-    @BelongsTo(() => Kind, "kindId")
+    @BelongsTo(() => Kind)
     kind: Kind;
 
     @BelongsToMany(() => Task, () => TaskDependency, "dependencyId")

@@ -104,6 +104,6 @@ export class TaskExecution extends Model implements PushDepTaskExecution {
     })
     taskId: string;
     
-    @BelongsTo(() => Task, "taskId")
+    @BelongsTo(() => Task)
     task: Task;    
 }
