@@ -1,4 +1,4 @@
-import { PushDepTaskExecution } from "src/core/PushDep"
+import { PushDepTaskExecution } from "../../../core/PushDep"
 import { Task } from "./Task.model";
 import { AutoIncrement, BelongsTo, Column, CreatedAt, DeletedAt, ForeignKey, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 

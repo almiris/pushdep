@@ -1,6 +1,5 @@
 import { PushDepExecutionState, PushDepTaskCount } from "src/core/PushDep";
 import { Repository } from "typeorm";
-import { Task } from "../entity/Task.entity";
 import { TaskExecution } from "../entity/TaskExecution.entity";
 import { GenericRepository } from "../helper/GenericRepository";
 
@@ -10,12 +9,12 @@ interface Count {
 }
 
 export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
-    constructor(private taskExecutionRepository: Repository<TaskExecution>) {
+    constructor(taskExecutionRepository: Repository<TaskExecution>) {
         super(taskExecutionRepository);
     }
 
     async findByTaskIdAsync(id: string): Promise<TaskExecution> {
-        return await this.taskExecutionRepository.findOne({
+        return await this.repository.findOne({
             where: {
                 taskId: id
             }
@@ -23,7 +22,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
     }
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
-        let queryBuilder = this.taskExecutionRepository
+        let queryBuilder = this.repository
             .createQueryBuilder("task_execution")
             .select("state")
             .addSelect("COUNT(state)", "count");
@@ -50,35 +49,35 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
     }
 
     async startAsync(taskId: string) {
-        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+        await this.repository.update({ taskId: taskId }, { 
             state: PushDepExecutionState.active, 
             startedAt: new Date() 
         });
     }
 
     async completeAsync(taskId: string) {
-        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+        await this.repository.update({ taskId: taskId }, { 
             state: PushDepExecutionState.completed, 
             completedAt: new Date() 
         });
     }
 
     async cancelAsync(taskId: string) {
-        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+        await this.repository.update({ taskId: taskId }, { 
             state: PushDepExecutionState.canceled, 
             canceledAt: new Date() 
         });
     }
 
     async failAsync(taskId: string) {
-        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+        await this.repository.update({ taskId: taskId }, { 
             state: PushDepExecutionState.failed, 
             failedAt: new Date() 
         });
     }
 
     async returnAsync(taskId: string) {
-        await this.taskExecutionRepository.update({ taskId: taskId }, { 
+        await this.repository.update({ taskId: taskId }, { 
             state: PushDepExecutionState.pending, 
             startedAt: null,
             completedAt: null,

@@ -1,6 +1,5 @@
-import { Column, ForeignKey, HasMany, Model, Table } from "sequelize-typescript";
+import { Column, ForeignKey, Model, Table } from "sequelize-typescript";
 import { Task } from "./Task.model";
-import { TaskExecution } from "./TaskExecution.model";
 
 @Table({
     timestamps: false,
@@ -16,7 +15,7 @@ export class TaskDependency extends Model {
         allowNull: false
     })
     @ForeignKey(() => Task)
-    taskId: Task;
+    taskId: string;
 
     @Column({
         field: "dependency_id",
@@ -24,5 +23,5 @@ export class TaskDependency extends Model {
         allowNull: false
     })
     @ForeignKey(() => Task)
-    dependencyId: Task;
+    dependencyId: string;
 }
