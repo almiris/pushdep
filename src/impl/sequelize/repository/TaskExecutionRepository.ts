@@ -1,9 +1,9 @@
-import { PushDepExecutionState, PushDepTaskCount } from "src/core/PushDep";
-import { Task } from "../model/Task.model";
+import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
 import { TaskExecution } from "../model/TaskExecution.model";
 import { GenericRepository } from "../helper/GenericRepository";
 import { Repository } from "sequelize-typescript";
-import { FindOptions } from "sequelize/types";
+import { FindOptions } from "sequelize";
+import { Task } from "../model/Task.model";
 
 interface Count { 
     state: number; 
@@ -11,20 +11,20 @@ interface Count {
 }
 
 export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
-    constructor(private taskExecutionRepository: Repository<TaskExecution>) {
+    constructor(taskExecutionRepository: Repository<TaskExecution>) {
         super(taskExecutionRepository);
     }
 
-    // async findByTaskIdAsync(id: string): Promise<TaskExecution> {
-    //     return await this.taskExecutionRepository.findOne({
-    //         where: {
-    //             taskId: id
-    //         }
-    //     });
-    // }
+    async findByTaskIdAsync(taskId: string): Promise<TaskExecution> {
+        return await this.repository.findOne({
+            where: {
+                taskId: taskId
+            }
+        });
+    }
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
-        let options: FindOptions = {
+        const options: FindOptions = {
             attributes: [ 
                 "state",
                 [this.repository.sequelize.fn('COUNT', this.repository.sequelize.col("state")), "count"]
@@ -36,12 +36,13 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         if (kindId) {
             options.include = {
                 model: Task,
+                required: true,
                 attributes: [],
                 where: {
                     kindId: kindId
                 }
             };
-        };
+        }
 
         const count = await this.repository.findAll(options) as unknown as Count[];
 
@@ -59,41 +60,51 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         });
     }
 
-    // async startAsync(taskId: string) {
-    //     await this.taskExecutionRepository.update({ taskId: taskId }, { 
-    //         state: PushDepExecutionState.active, 
-    //         startedAt: new Date() 
-    //     });
-    // }
+    async startAsync(transaction, taskId: string): Promise<boolean> {
+        return (await this.updateAsync(transaction, {
+            state: PushDepExecutionState.active, 
+            startedAt: new Date() 
+        }, {
+            taskId: taskId
+        }))[0] == 1;
+    }
 
-    // async completeAsync(taskId: string) {
-    //     await this.taskExecutionRepository.update({ taskId: taskId }, { 
-    //         state: PushDepExecutionState.completed, 
-    //         completedAt: new Date() 
-    //     });
-    // }
+    async completeAsync(transaction, taskId: string): Promise<boolean> {
+        return (await this.updateAsync(transaction, {
+            state: PushDepExecutionState.completed, 
+            completedAt: new Date() 
+        }, {
+            taskId: taskId
+        }))[0] == 1;
+    }
 
-    // async cancelAsync(taskId: string) {
-    //     await this.taskExecutionRepository.update({ taskId: taskId }, { 
-    //         state: PushDepExecutionState.canceled, 
-    //         canceledAt: new Date() 
-    //     });
-    // }
+    async cancelAsync(transaction, taskId: string): Promise<boolean> {
+        return (await this.updateAsync(transaction, {
+            state: PushDepExecutionState.canceled, 
+            canceledAt: new Date() 
+        }, {
+            taskId: taskId
+        }))[0] == 1;
+    }
 
-    // async failAsync(taskId: string) {
-    //     await this.taskExecutionRepository.update({ taskId: taskId }, { 
-    //         state: PushDepExecutionState.failed, 
-    //         failedAt: new Date() 
-    //     });
-    // }
+    async failAsync(transaction, taskId: string): Promise<boolean> {
+        return (await this.updateAsync(transaction, {
+            state: PushDepExecutionState.failed, 
+            failedAt: new Date() 
+        }, {
+            taskId: taskId
+        }))[0] == 1;
+    }
 
-    // async returnAsync(taskId: string) {
-    //     await this.taskExecutionRepository.update({ taskId: taskId }, { 
-    //         state: PushDepExecutionState.pending, 
-    //         startedAt: null,
-    //         completedAt: null,
-    //         canceledAt: null,
-    //         failedAt: null
-    //     });
-    // }
+    async returnAsync(transaction, taskId: string): Promise<boolean> {
+        return (await this.updateAsync(transaction, {
+            state: PushDepExecutionState.pending, 
+            startedAt: null,
+            completedAt: null,
+            canceledAt: null,
+            failedAt: null
+        }, {
+            taskId: taskId
+        }))[0] == 1;
+    }
 }

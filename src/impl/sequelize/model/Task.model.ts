@@ -1,5 +1,5 @@
 import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
-import { PushDepTask } from "src/core/PushDep";
+import { PushDepTask } from "../../../core/PushDep";
 import { Kind } from "./Kind.model";
 import { TaskDependency } from "./TaskDependency.model";
 import { TaskExecution } from "./TaskExecution.model";

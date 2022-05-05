@@ -88,6 +88,7 @@ that the task will be completed and/or cleaned. this could be the role of a dedi
 a max execution time; if now - last state time > max execution time, then clean(kind) would return the task that could then be returned (to pending) or deleted. The worker is should be written in the task allowing the worker to control if it still owns the task when it try to update the task (a slow worker could have lost the ownership of the task)
 - Worker auto stop - worker would automatically stop as soon as their is no more task of the worker's kind available
 - Add indexes (for example, taskexecution.state, task.priority)
+- findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync is not optimized and will not work with a lot of tasks and dependencies. To optimize, a dependency should update its parent once completed / canceled or failed. Two ways of doing this : 1/ one a dependency is updated, its parent dependencies state is checked and a parent flag is updated, for example "readyToStart" or a dependency "completed" counter is incremented, and the parent can start one the counter is equal to the parent's dependencies count (which could be a field of task); a task may have no dependencies
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)

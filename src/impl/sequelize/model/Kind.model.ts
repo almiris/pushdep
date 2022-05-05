@@ -1,4 +1,4 @@
-import { PushDepKind } from "src/core/PushDep";
+import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreatedAt, DeletedAt, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { Task } from "./Task.model";
 

@@ -1,72 +1,18 @@
 import "dotenv/config";
-import { InMemoryPushDep } from "src/impl/inmemory/InMemoryPushDep";
-import { Kind } from "src/impl/typeorm/entity/Kind.entity";
-import { Task } from "src/impl/typeorm/entity/Task.entity";
-import { TaskExecution } from "src/impl/typeorm/entity/TaskExecution.entity";
-import { TypeORMPushDep } from "src/impl/typeorm/TypeORMPushDep";
-import { DataSource } from "typeorm";
 import { promisify } from "util";
+import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEPS } from "./commons.spec";
 import { PushDep, PushDepTask } from "./PushDep";
 import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
 
 const sleep = promisify(setTimeout);
 
-let dataSource: DataSource;
-let pushDep: PushDep;
+describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
-const pushDepClassCLIArg: string = process.argv.map(arg => arg.startsWith("--pushDepClass=") ? arg.substring("--pushDepClass=".length) : null).filter(arg => arg)[0];
+    beforeAll(async () => await beforeAllAsync(pushDepClass));
 
-const PUSHDEP_CLASSES = {
-    "InMemoryPushDep": InMemoryPushDep,
-    "TypeORMPushDep": TypeORMPushDep
-};
+    afterAll(async () => await afterAllAsync(pushDepClass));
 
-describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
-    pushDepClass: "InMemoryPushDep"
-}, {
-    pushDepClass: "TypeORMPushDep"
-}])('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
-
-    beforeAll(async () => {
-        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
-            dataSource = new DataSource({
-                type: process.env.DB_TYPE as any,
-                host: process.env.DB_HOST,
-                port: Number(process.env.DB_PORT),
-                username: process.env.DB_USERNAME,
-                password: process.env.DB_PASSWORD,
-                database: process.env.DB_NAME,
-                ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
-                extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
-                synchronize: true,
-                logging: true,
-                entities: [Kind, Task, TaskExecution],
-                migrations: [],
-                subscribers: [],
-            });
-            await dataSource.initialize();
-            pushDep = new TypeORMPushDep(dataSource);
-        }
-    });
-
-    afterAll(async () => {
-        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
-            await dataSource.destroy();
-        }
-    });
-
-    beforeEach(async () => {
-        if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
-            await dataSource.manager.delete(TaskExecution, {});
-            await dataSource.manager.delete(Task, {});
-            await dataSource.manager.delete(Kind, {});
-        }
-        else if (PUSHDEP_CLASSES[pushDepClass] === InMemoryPushDep) {
-            pushDep = new InMemoryPushDep();
-        }
-        await pushDep.setKindAsync({ id: "a", concurrency: 3 });
-        await pushDep.setKindAsync({ id: "b", concurrency: 3 });
-    });
+    beforeEach(async () => await beforeEachAsync(pushDepClass));
 
     it('It should work ;-)', async () => {
         let numberOfTasks = 3;
@@ -123,11 +69,13 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
 
         const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
             console.log(`worker ${worker.id} treating task ${task.id}`);
-            await sleep(10);
+            await sleep(1000);
             await pushDep.completeAsync(task);
             numberOfTasks--;
         };
 
+        await pushDep.setKindAsync({ id: "b", concurrency: 3 });
+        
         const worker1 = new PushDepWorker(pushDep, {
             kindId: "a",
             idleTimeoutMs: 100
@@ -186,7 +134,7 @@ describe.each(pushDepClassCLIArg ? [{ pushDepClass: pushDepClassCLIArg }] : [{
         await worker3.waitForTerminationAsync();
 
         expect.assertions(2);
-
+        
         console.log(`executed in ${new Date().getTime() - start} ms`);
     }, 10000);
 

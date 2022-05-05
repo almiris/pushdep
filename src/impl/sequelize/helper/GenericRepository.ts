@@ -1,5 +1,5 @@
 import { Model, Repository } from "sequelize-typescript";
-import { Attributes, Transaction, WhereOptions } from "sequelize/types";
+import { Attributes, Includeable, Transaction, WhereOptions } from "sequelize";
 
 export abstract class GenericRepository<M extends Model> {
     constructor(protected repository: Repository<M>) {
@@ -7,6 +7,12 @@ export abstract class GenericRepository<M extends Model> {
 
     async createAsync(transaction: Transaction | null, model: M): Promise<M> {
         return await this.repository.create(model as any, {
+            transaction: transaction
+        });
+    }
+
+    async bulkCreateAsync(transaction: Transaction | null, models: M[]): Promise<M[]> {
+        return await this.repository.bulkCreate(models as any[], {
             transaction: transaction
         });
     }

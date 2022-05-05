@@ -4,12 +4,12 @@ import { Kind } from "../entity/Kind.entity";
 import { GenericRepository } from "../helper/GenericRepository";
 
 export class KindRepository extends GenericRepository<Kind> {
-    constructor(private kindRepository: Repository<Kind>) {
+    constructor(kindRepository: Repository<Kind>) {
         super(kindRepository);
     }
 
     async findAsync(kindId: string): Promise<PushDepKind> {
-        return await this.kindRepository.findOne({
+        return await this.repository.findOne({
             select: {
                 id: true,
                 concurrency : true
