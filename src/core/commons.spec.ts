@@ -97,3 +97,5 @@ export async function beforeEachAsync(pushDepClass) {
     }
     await pushDep.setKindAsync({ id: "a", concurrency: 3 });
 }
+
+describe("One test suite is needed for the test to succeed - i like the .spec filename ;-)", () => {});
