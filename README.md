@@ -140,6 +140,35 @@ stateDiagram-v2
     task2 --> [*]
 ```
 ## In-process deployment
+```mermaid 
+flowchart TB
+    classDef subgraph_padding fill:none,stroke:none
+    subgraph app1 [Application 1]
+        direction LR
+        subgraph space1 [ ]
+        direction LR
+            subgraph p1 [Process 1]
+                direction LR
+                f1[[Functions of the app]] --> |"push(task of kind A)"| pushdep1[[InMemoryPushDep]]
+                f1[[Functions of the app]] --> |"push(task of kind B)"| pushdep1[[InMemoryPushDep]]
+                pushdep1[[InMemoryPushDep]] --> |"start(task of kind A)"| wA1[[Workers for kind A]]
+                wA1[[Workers for kind A]] --> |"complete | cancel | fail | return(task of kind A)"| pushdep1[[InMemoryPushDep]]
+                pushdep1[[InMemoryPushDep]] --> |"start(task of kind B)"| wB1[[Workers for kind B]]
+                wB1[[Workers for kind B]] --> |"complete | cancel | fail | return(task of kind B)"| pushdep1[[InMemoryPushDep]]
+            end
+        end
+        subgraph p2 [Process 2]
+            direction LR
+            f2[[Functions of the app]] --> |"push(task of kind A)"| pushdep2[[InMemoryPushDep]]
+            f2[[Functions of the app]] --> |"push(task of kind B)"| pushdep2[[InMemoryPushDep]]
+            pushdep2[[InMemoryPushDep]] --> |"start(task of kind A)"| wA2[[Workers for kind A]]
+            wA2[[Workers for kind A]] --> |"complete | cancel | fail | return(task of kind A)"| pushdep2[[InMemoryPushDep]]
+            pushdep2[[InMemoryPushDep]] --> |"start(task of kind B)"| wB2[[Workers for kind B]]
+            wB2[[Workers for kind B]] --> |"complete | cancel | fail | return(task of kind B)"| pushdep2[[InMemoryPushDep]]
+        end
+    end
+    class space1 subgraph_padding
+```
 
 ## Multi-process deployment
 ```mermaid 
@@ -167,22 +196,26 @@ flowchart LR
         direction LR
         subgraph space2 [ ]
         direction LR
-            subgraph p3 [Process 1]
-            direction LR
-                wB3[[Workers for kind B]]
-            end
             subgraph p4 [Process 2]
             direction LR
                 wB4[[Workers for kind B]]
+            end
+            subgraph p3 [Process 1]
+            direction LR
+                wB3[[Workers for kind B]]
             end
         end
     end
     pushdep1 --> |insert| DB[(Database)]
     pushdep2 --> |insert| DB[(Database)] 
     DB --> |"start(task of kind A)"|wA1
+    wA1 --> |"complete | cancel | fail | return(task of kind A)"|DB
     DB --> |"start(task of kind A)"|wA2
+    wA2 --> |"complete | cancel | fail | return(task of kind A)"|DB
     DB --> |"start(task of kind B)"|wB3
+    wB3 --> |"complete | cancel | fail | return(task of kind B)"|DB
     DB --> |"start(task of kind B)"|wB4
+    wB4 --> |"complete | cancel | fail | return(task of kind B)"|DB
     class space1 subgraph_padding
     class space2 subgraph_padding
 ```
