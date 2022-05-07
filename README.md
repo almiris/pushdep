@@ -296,3 +296,106 @@ flowchart LR
     class space2 subgraph_padding
 ```
 
+## Class diagram
+```mermaid
+classDiagram
+    direction TB
+    PushDepTask --* PushDepTask: has dependencies
+    %%InMemoryPushDep --* PushDepTask: has
+    %%InMemoryPushDep --* PushDepKind: has
+    PushDep <|.. InMemoryPushDep: implements
+    PushDep <|.. TypeORMPushDep: implements
+    PushDep <|.. SequelizePushDep: implements
+    PushDep ..> PushDepKind: uses
+    PushDep ..> PushDepTask: uses
+    PushDep ..> PushDepTaskCount: uses
+    PushDepWorker --* PushDep: has
+    PushDepWorker --* PushDepWorkerOptions: has
+    PushDepWorker ..> PushDepTask: uses
+    PushDepWorker ..> PushDepKind: uses
+    PushDepWorker ..> PushDepTaskCount: uses
+    class PushDep {
+        <<interface>>
+        +setKindAsync(kind: PushDepKind)Promise~void~
+        +getKindAsync(kindId: string)Promise~PushDepKind~
+        +pushAsync(task: PushDepTask)Promise~PushDepTask~
+        +countAsync(kindId?: string)Promise~PushDepTaskCount~
+        +peekAsync(kindId: string)Promise~PushDepTask~
+        +startAsync(kindId: string)Promise~PushDepTask~
+        +completeAsync(task: PushDepTask)Promise~void~
+        +cancelAsync(task: PushDepTask)Promise~void~
+        +failAsync(task: PushDepTask)Promise~void~
+        +returnAsync(task: PushDepTask)Promise~void~
+    }
+    class InMemoryPushDep {
+        +setKind(kind: PushDepKind)~void~
+        +getKind(kindId: string)~PushDepKind~
+        +push(task: PushDepTask)~PushDepTask~
+        +count(kindId?: string)~PushDepTaskCount~
+        +peek(kindId: string)~PushDepTask~
+        +start(kindId: string)~PushDepTask~
+        +complete(task: PushDepTask)~void~
+        +cancel(task: PushDepTask)~void~
+        +fail(task: PushDepTask)~void~
+        +return(task: PushDepTask)~void~
+    }
+    class TypeORMPushDep {
+        +constructor(datasource: Datasource)
+        +setKindAsync(kind: PushDepKind)Promise~void~
+        +getKindAsync(kindId: string)Promise~PushDepKind~
+        +pushAsync(task: PushDepTask)Promise~PushDepTask~
+        +countAsync(kindId?: string)Promise~PushDepTaskCount~
+        +peekAsync(kindId: string)Promise~PushDepTask~
+        +startAsync(kindId: string)Promise~PushDepTask~
+        +completeAsync(task: PushDepTask)Promise~void~
+        +cancelAsync(task: PushDepTask)Promise~void~
+        +failAsync(task: PushDepTask)Promise~void~
+        +returnAsync(task: PushDepTask)Promise~void~
+    } 
+    class SequelizePushDep {
+        +constructor(sequelize: Sequelize)
+        +setKindAsync(kind: PushDepKind)Promise~void~
+        +getKindAsync(kindId: string)Promise~PushDepKind~
+        +pushAsync(task: PushDepTask)Promise~PushDepTask~
+        +countAsync(kindId?: string)Promise~PushDepTaskCount~
+        +peekAsync(kindId: string)Promise~PushDepTask~
+        +startAsync(kindId: string)Promise~PushDepTask~
+        +completeAsync(task: PushDepTask)Promise~void~
+        +cancelAsync(task: PushDepTask)Promise~void~
+        +failAsync(task: PushDepTask)Promise~void~
+        +returnAsync(task: PushDepTask)Promise~void~
+    }       
+    class PushDepTask {
+        <<interface>>
+        +string readonly id?
+        +string kindId
+        +PushDepTask[] dependencies?
+        +any args?
+        +number priority?
+        +any results?
+    }
+    class PushDepKind {
+        <<interface>>
+        +string id
+        +number concurrency
+    }
+    class PushDepTaskCount {
+        <<interface>>
+        +number pending
+        +number active
+        +number completed
+        +number canceled
+        +number failed
+        +number all
+    }
+    class PushDepWorkerOptions {
+        +string kindId
+        +number idleTimeoutMs
+    }
+    class PushDepWorker {
+        +constructor(pushDep: PushDep, options: PushDepWorkerOptions, worker: PushDepWorkerFunction)
+        +startAsync()Promise~void~
+        +stopAsync()Promise~void~
+        +waitForTerminationAsync()Promise~void~
+    }
+```
