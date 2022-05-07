@@ -68,6 +68,30 @@ it('It should execute a simple demo', async () => {
 
 ## Concurrency
 
+## Building the task dependency tree
+```mermaid
+flowchart TB
+    subgraph single_with_dependencies["Single task with multiple dependencies"]
+        direction BT
+        A43[A3] --> A41[A1] --- root4(( ))
+        A43[A3] --> A42[A2] --- root4(( ))
+    end
+    subgraph single_with_dependency["Single task with a single dependency"]
+        direction BT
+        A31[A2] --> A32[A1] --- root3(( ))
+    end
+    subgraph multiple["Multiple tasks"]
+        direction BT
+        A21[A1] --- root2(( ))
+        A22[A2] --- root2(( ))
+        A23[A3] --- root2(( ))
+    end
+    subgraph single["Single task"]
+        direction BT
+        A1[A] --- root1(( ))
+    end
+```
+
 ## Task lifecycle
 ```mermaid
 stateDiagram-v2
