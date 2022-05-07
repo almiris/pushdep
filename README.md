@@ -4,11 +4,11 @@
 
 It has a learning curve of 5 minutes and is up and runnning as soon as you *npm-installed* it in your project.
 
-The library targets small to mid size projects that may not want to use a database, or a distributed in-memory cache. Nevertheless, it works well with some of the databases supported by typeORM.
+The library targets small to mid size projects that may not want to use a database, or a distributed in-memory cache. Nevertheless, it works well with some of the databases supported by typeORM or Sequelize.
 
 It is built using TypeScript and targets Node JS.
 
-It implements an internal in-memory in-process store that can be used for single processor implementation use cases. For more complex use cases, *PushDep* implements a central SQL store supporting some of the SQL datasources supported by typeORM (as of today, this has only been tested with PostgreSQL).
+It implements an internal in-memory in-process store that can be used for single process implementation use cases. For more complex use cases, *PushDep* uses a shared SQL storage supporting some of the SQL datasources supported by typeORM or Sequelize (as of today, this has only been tested with PostgreSQL).
 
 ## Installation
 
@@ -215,7 +215,7 @@ stateDiagram-v2
     task1 --> task2
     task2 --> [*]
 ```
-## In-process deployment
+## In-memory per process deployment
 ```mermaid 
 flowchart TB
     classDef subgraph_padding fill:none,stroke:none
@@ -246,7 +246,7 @@ flowchart TB
     class space1 subgraph_padding
 ```
 
-## Multi-process deployment
+## Shared storage multi-process deployment
 ```mermaid 
 flowchart LR
     classDef subgraph_padding fill:none,stroke:none

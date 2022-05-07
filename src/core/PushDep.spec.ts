@@ -331,5 +331,5 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         });
 
         expect.assertions(2);
-    }, 10000);
-}, 60000);
+    }, 30000);
+}, 120000);
