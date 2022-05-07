@@ -1,5 +1,5 @@
 {
-   "name": "pushdep",
+   "name": "@almiris/pushdep",
    "version": "1.0.0",
    "description": "A concurrent executor for hierarchical tasks (tasks that *depend* on other tasks). It can also be used as a message queue, a workflow engine or a process manager.",
    "scripts": {
@@ -29,8 +29,13 @@
       "typescript",
       "dependency"
    ],
+   "homepage": "https://github.com/almiris/pushdep",
    "author": "Almiris",
    "license": "ISC",
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/almiris/pushdep"
+   },
    "dependencies": {
       "uuid": "^8.3.2"
    },

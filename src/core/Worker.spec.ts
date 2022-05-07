@@ -60,7 +60,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         await workerB.waitForTerminationAsync();
 
         expect.assertions(1);
-    }, 10000);
+    }, 30000);
 
     it('It should execute a hierarchical job using multiple workers', async () => {
         const start = new Date().getTime();
@@ -136,7 +136,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         expect.assertions(2);
         
         console.log(`executed in ${new Date().getTime() - start} ms`);
-    }, 10000);
+    }, 30000);
 
     it('It should execute a simple dummy demo', async () => {
         await pushDep.setKindAsync({ id: "foo", concurrency: 3 });
@@ -176,5 +176,5 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
 
         expect(["012345", "013245"]).toContain(executionPath.join(""));
         expect.assertions(1);
-    }, 10000);
-}, 60000);
+    }, 30000);
+});
