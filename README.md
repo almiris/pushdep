@@ -71,25 +71,77 @@ it('It should execute a simple demo', async () => {
 ## Building the task dependency tree
 ```mermaid
 flowchart TB
-    subgraph single_with_dependencies["Single task with multiple dependencies"]
-        direction BT
-        A43[A3] --> A41[A1] --- root4(( ))
-        A43[A3] --> A42[A2] --- root4(( ))
+    classDef subgraph_padding fill:none,stroke:none
+    subgraph single_with_dependencies["Multiple dependencies"]
+        subgraph pad4 [ ]
+            direction BT
+            A43[A3] --> A41[A1] --- root4(( ))
+            A43[A3] --> A42[A2] --- root4(( ))
+        end
     end
-    subgraph single_with_dependency["Single task with a single dependency"]
-        direction BT
-        A31[A2] --> A32[A1] --- root3(( ))
+    subgraph single_with_dependency["Single dependency"]
+        subgraph pad3 [ ]
+            direction BT
+            A31[A2] --> A32[A1] --- root3(( ))
+        end
     end
     subgraph multiple["Multiple tasks"]
-        direction BT
-        A21[A1] --- root2(( ))
-        A22[A2] --- root2(( ))
-        A23[A3] --- root2(( ))
+        subgraph pad2 [ ]
+            direction BT
+            A21[A1] --- root2(( ))
+            A22[A2] --- root2(( ))
+            A23[A3] --- root2(( ))
+        end
     end
     subgraph single["Single task"]
-        direction BT
-        A1[A] --- root1(( ))
+        subgraph pad1 [ ]
+            direction BT
+            A1[A] --- root1(( ))
+        end
     end
+    class pad4 subgraph_padding
+    class pad3 subgraph_padding
+    class pad2 subgraph_padding
+    class pad1 subgraph_padding
+```
+```mermaid
+flowchart TB
+    classDef subgraph_padding fill:none,stroke:none
+    subgraph combining_models3["Combination 3"]
+        subgraph pad8 [ ]
+            direction BT
+            A84[A4] --- A81[A1] --- root8(( ))
+            A86[A6] --- A84[A4] --- A82[A2] --- root8(( ))
+            A86[A6] --- A85[A5] --- A81[A1]
+            A85[A5] --- A83[A3] --- root8(( ))
+        end
+    end
+    subgraph combining_models2["Combination 2"]
+        subgraph pad7 [ ]
+            direction BT
+            A74[A4] --> A71[A1] --- root7(( ))
+            A74[A4] --> A73[A3] --> A72[A2] --- root7(( ))
+            A75[A5] --> A73[A3]
+        end
+    end
+    subgraph combining_models1["Combination 1"]
+        subgraph pad6 [ ]
+            direction BT
+            A63[A3] --> A61[A1] --- root6(( ))
+            A64[A4] --> A63[A3] --> A62[A2] --- root6(( ))
+        end
+    end
+    subgraph multiple_sharing_dependency["Dependency sharing"]
+        subgraph pad5 [ ]
+            direction BT
+            A52[A2] --> A51[A1] --- root5(( ))
+            A53[A3] --> A51[A1] --- root5(( ))
+        end
+    end
+    class pad8 subgraph_padding
+    class pad7 subgraph_padding
+    class pad6 subgraph_padding
+    class pad5 subgraph_padding
 ```
 
 ## Task lifecycle
