@@ -42,6 +42,11 @@ flowchart TB
 Below is a simple unit test using an *InMemoryPushDep* to execute the tasks. [Read the full documentation](https://github.com/almiris/pushdep/blob/master/doc/documentation.md) to see how you can store the tasks in a shared SQL storage using the *TypeORMPushDep* or the *SequelizePushDep*.
 
 ```typescript 
+import { PushDep, PushDepTask, PushDepWorker } from "@almiris/pushdep";
+import { InMemoryPushDep } from "@almiris/pushdep/inmemory";
+import { promisify } from "util";
+const sleep = promisify(setTimeout);
+
 it('It should execute a simple demo', async () => {
     const pushDep = new InMemoryPushDep();
 
@@ -49,7 +54,7 @@ it('It should execute a simple demo', async () => {
     await pushDep.setKindAsync({ id: "bar", concurrency: 3 });
 
     let numberOfTasks = 6;
-    const executionPath = [];
+    const executionPath: number[] = [];
 
     // The worker functions is where your application treats the tasks
     const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
@@ -69,9 +74,9 @@ it('It should execute a simple demo', async () => {
     const task0 = await pushDep.pushAsync({ kindId: "foo", args: { step: 0 } });
     const task1 = await pushDep.pushAsync({ kindId: "foo", args: { step: 1 } });
     const task2 = await pushDep.pushAsync({ kindId: "foo", args: { step: 2 } });
-    const task3 = await pushDep.pushAsync({ kindId: "bar", args: { step: 3 }, dependencies: [task0, task1] };
-    const task4 = await pushDep.pushAsync({ kindId: "bar", args: { step: 4 }, dependencies: [task0, task2] };
-    const task5 = await pushDep.pushAsync({ kindId: "foo", args: { step: 5 }, dependencies: [task3, task4] };
+    const task3 = await pushDep.pushAsync({ kindId: "bar", args: { step: 3 }, dependencies: [task0, task1] });
+    const task4 = await pushDep.pushAsync({ kindId: "bar", args: { step: 4 }, dependencies: [task0, task2] });
+    await pushDep.pushAsync({ kindId: "foo", args: { step: 5 }, dependencies: [task3, task4] });
 
     // We're waiting for all tasks to complete - Depending on the use case, your application will wait or not
     while (numberOfTasks) {

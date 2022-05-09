@@ -1,4 +1,4 @@
-import { PushDepExecutionState } from "src/core/PushDep";
+import { PushDepExecutionState } from "../../../core/PushDep";
 import { Repository } from "typeorm";
 import { Task } from "../entity/Task.entity";
 import { GenericRepository } from "../helper/GenericRepository";

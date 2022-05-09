@@ -1,4 +1,4 @@
-import { PushDepTaskExecution } from "src/core/PushDep"
+import { PushDepTaskExecution } from "../../../core/PushDep"
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, VersionColumn, ManyToOne, JoinColumn } from "typeorm"
 import { Task } from "./Task.entity";
 
