@@ -1,4 +1,4 @@
-import { PushDepKind } from "src/core/PushDep";
+import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Task } from "./Task.entity";
 

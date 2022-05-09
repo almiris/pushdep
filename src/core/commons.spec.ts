@@ -1,15 +1,15 @@
 import "dotenv/config";
 import { Sequelize } from "sequelize-typescript";
-import { InMemoryPushDep } from "src/impl/inmemory/InMemoryPushDep";
-import { Kind as SequelizeKind } from "src/impl/sequelize/model/Kind.model";
-import { Task as SequelizeTask } from "src/impl/sequelize/model/Task.model";
-import { TaskDependency as SequelizeTaskDependency } from "src/impl/sequelize/model/TaskDependency.model";
-import { TaskExecution as SequelizeTaskExecution } from "src/impl/sequelize/model/TaskExecution.model";
-import { SequelizePushDep } from "src/impl/sequelize/SequelizePushDep";
-import { Kind as TypeORMKind } from "src/impl/typeorm/entity/Kind.entity";
-import { Task as TypeORMTask } from "src/impl/typeorm/entity/Task.entity";
-import { TaskExecution as TypeORMTaskExecution } from "src/impl/typeorm/entity/TaskExecution.entity";
-import { TypeORMPushDep } from "src/impl/typeorm/TypeORMPushDep";
+import { InMemoryPushDep } from "../impl/inmemory/InMemoryPushDep";
+import { Kind as SequelizeKind } from "../impl/sequelize/model/Kind.model";
+import { Task as SequelizeTask } from "../impl/sequelize/model/Task.model";
+import { TaskDependency as SequelizeTaskDependency } from "../impl/sequelize/model/TaskDependency.model";
+import { TaskExecution as SequelizeTaskExecution } from "../impl/sequelize/model/TaskExecution.model";
+import { SequelizePushDep } from "../impl/sequelize/SequelizePushDep";
+import { Kind as TypeORMKind } from "../impl/typeorm/entity/Kind.entity";
+import { Task as TypeORMTask } from "../impl/typeorm/entity/Task.entity";
+import { TaskExecution as TypeORMTaskExecution } from "../impl/typeorm/entity/TaskExecution.entity";
+import { TypeORMPushDep } from "../impl/typeorm/TypeORMPushDep";
 import { DataSource } from "typeorm";
 import { PushDep } from "./PushDep";
 

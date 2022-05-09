@@ -1,4 +1,4 @@
-import { PushDepKind } from "src/core/PushDep";
+import { PushDepKind } from "../../../core/PushDep";
 import { Repository } from "typeorm";
 import { Kind } from "../entity/Kind.entity";
 import { GenericRepository } from "../helper/GenericRepository";

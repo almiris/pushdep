@@ -1,7 +1,9 @@
 {
    "name": "@almiris/pushdep",
-   "version": "1.0.2",
+   "version": "1.0.3",
    "description": "A concurrent executor for hierarchical tasks (tasks that *depend* on other tasks). It can also be used as a message queue, a workflow engine or a process manager.",
+   "main": "index.js",
+   "types": "index.d.ts",
    "scripts": {
       "start": "ts-node src/index.ts",
       "typeorm": "typeorm-ts-node-commonjs",
@@ -11,7 +13,11 @@
       "test": "jest --runInBand",
       "test:watch": "jest --watch --runInBand",
       "test:cov": "jest --runInBand --coverage",
-      "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+      "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+      "package" : "rm -rf package && tsc && cp -R dist package && cp package.json package && cp README.md package && cd package && npm pack"
+   },
+   "publishConfig": {
+      "access": "public"
    },
    "keywords": [
       "executor",
@@ -36,9 +42,6 @@
       "type": "git",
       "url": "https://github.com/almiris/pushdep"
    },
-   "dependencies": {
-      "uuid": "^8.3.2"
-   },
    "devDependencies": {
       "@types/jest": "^27.4.1",
       "@types/node": "^16.11.10",
@@ -56,7 +59,8 @@
       "ts-node": "10.7.0",
       "tsconfig-paths": "^3.14.1",
       "typeorm": "^0.3.6",
-      "typescript": "4.5.2"
+      "typescript": "4.5.2",
+      "uuid": "^8.3.2"
    },
    "jest": {
       "moduleFileExtensions": [

@@ -12,8 +12,19 @@ It implements an internal in-memory in-process store that can be used for single
 
 ## Installation
 
+### In-Memory
 ```bash
-npm install @almiris/pushdep 
+npm install uuid @almiris/pushdep
+```
+
+### TypeORM
+```bash
+npm install reflect-metadata typeorm pg @almiris/pushdep
+```
+
+### Sequelize
+```bash
+npm install reflect-metadata sequelize sequelize-typescript @almiris/pushdep
 ```
 
 ## Quickstart
@@ -24,6 +35,11 @@ This quickstart illustrates how to execute the following tasks hierarchy:
 Below is a simple unit test using an *InMemoryPushDep* to execute the tasks. [Read the full documentation](https://github.com/almiris/pushdep/blob/master/doc/documentation.md) to see how you can store the tasks in a shared SQL storage using the *TypeORMPushDep* or the *SequelizePushDep*.
 
 ```typescript 
+import { PushDep, PushDepTask, PushDepWorker } from "@almiris/pushdep";
+import { InMemoryPushDep } from "@almiris/pushdep/inmemory";
+import { promisify } from "util";
+const sleep = promisify(setTimeout);
+
 it('It should execute a simple demo', async () => {
     const pushDep = new InMemoryPushDep();
 
@@ -31,7 +47,7 @@ it('It should execute a simple demo', async () => {
     await pushDep.setKindAsync({ id: "bar", concurrency: 3 });
 
     let numberOfTasks = 6;
-    const executionPath = [];
+    const executionPath: number[] = [];
 
     // The worker functions is where your application treats the tasks
     const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
