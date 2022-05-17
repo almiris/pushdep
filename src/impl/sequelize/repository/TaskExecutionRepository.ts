@@ -2,7 +2,7 @@ import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
 import { TaskExecution } from "../model/TaskExecution.model";
 import { GenericRepository } from "../helper/GenericRepository";
 import { Repository } from "sequelize-typescript";
-import { FindOptions } from "sequelize";
+import { FindOptions, Transaction } from "sequelize";
 import { Task } from "../model/Task.model";
 
 interface Count { 
@@ -15,8 +15,9 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         super(taskExecutionRepository);
     }
 
-    async findByTaskIdAsync(taskId: string): Promise<TaskExecution> {
+    async findByTaskIdAsync(transaction: Transaction, taskId: string): Promise<TaskExecution> {
         return await this.repository.findOne({
+            transaction: transaction,
             where: {
                 taskId: taskId
             }
@@ -60,7 +61,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         });
     }
 
-    async startAsync(transaction, taskId: string): Promise<boolean> {
+    async startAsync(transaction: Transaction, taskId: string): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.active, 
             startedAt: new Date() 
@@ -69,7 +70,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         }))[0] == 1;
     }
 
-    async completeAsync(transaction, taskId: string): Promise<boolean> {
+    async completeAsync(transaction: Transaction, taskId: string): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.completed, 
             completedAt: new Date() 
@@ -78,7 +79,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         }))[0] == 1;
     }
 
-    async cancelAsync(transaction, taskId: string): Promise<boolean> {
+    async cancelAsync(transaction: Transaction, taskId: string): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.canceled, 
             canceledAt: new Date() 
@@ -87,7 +88,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         }))[0] == 1;
     }
 
-    async failAsync(transaction, taskId: string): Promise<boolean> {
+    async failAsync(transaction: Transaction, taskId: string): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.failed, 
             failedAt: new Date() 
@@ -96,7 +97,7 @@ export class TaskExecutionRepository extends GenericRepository<TaskExecution> {
         }))[0] == 1;
     }
 
-    async returnAsync(transaction, taskId: string): Promise<boolean> {
+    async returnAsync(transaction: Transaction, taskId: string): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.pending, 
             startedAt: null,

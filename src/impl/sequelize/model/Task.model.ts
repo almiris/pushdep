@@ -1,6 +1,7 @@
-import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
+import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Index, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { PushDepTask } from "../../../core/PushDep";
 import { Kind } from "./Kind.model";
+import { KindActivityLock } from "./KindActivityLock.model";
 import { TaskDependency } from "./TaskDependency.model";
 import { TaskExecution } from "./TaskExecution.model";
 
@@ -30,6 +31,9 @@ export class Task extends Model implements PushDepTask {
         type: "int",
         allowNull: false,
         comment: "Priority of the task"
+    })
+    @Index({
+        name: "idx_task_priority"
     })
     priority: number;
 
@@ -100,4 +104,7 @@ export class Task extends Model implements PushDepTask {
 
     @HasMany(() => TaskExecution)
     taskExecutions: TaskExecution[];
+
+    @HasMany(() => KindActivityLock)
+    kindActivityLocks: KindActivityLock[];
 }

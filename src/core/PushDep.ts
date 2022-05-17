@@ -1,6 +1,7 @@
 export interface PushDepKind {
     id: string;
     concurrency: number;
+    lockTimeoutMs?: number;
     // retry?: number; // TODO
 }
 
@@ -21,7 +22,7 @@ export const PushDepTaskProperties: PushDepTask = {
     args: null,
     priority: null,
     results: null
-};
+}
 
 export enum PushDepExecutionState {
     pending = 1,

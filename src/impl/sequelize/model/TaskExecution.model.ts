@@ -1,6 +1,6 @@
 import { PushDepTaskExecution } from "../../../core/PushDep"
 import { Task } from "./Task.model";
-import { AutoIncrement, BelongsTo, Column, CreatedAt, DeletedAt, ForeignKey, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
+import { AutoIncrement, BelongsTo, Column, CreatedAt, DeletedAt, ForeignKey, Index, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 
 /**
  * A task execution. As of now, there is only one TaskExecution per Task so both entities
@@ -24,7 +24,7 @@ export class TaskExecution extends Model implements PushDepTaskExecution {
     @AutoIncrement
     @Column({
         field: "id",
-        type: "int"
+        // type: "int" // conflicts with @AutoIncrement which set the SERIAL type
     })
     id: number;
 
@@ -33,6 +33,9 @@ export class TaskExecution extends Model implements PushDepTaskExecution {
         type: "int",
         allowNull: false,
         comment: "State of this execution"
+    })
+    @Index({
+        name: "idx_task_execution_state"
     })
     state: number;
 

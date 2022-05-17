@@ -1,6 +1,7 @@
 import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreatedAt, DeletedAt, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { Task } from "./Task.model";
+import { KindActivityLock } from "./KindActivityLock.model";
 
 @Table({
     timestamps: true,
@@ -27,6 +28,14 @@ export class Kind extends Model implements PushDepKind {
         comment: "Max concurrency for this kind - Multiple workers will only be able to execute this number of tasks concurrently"
     })
     concurrency: number;
+
+    @Column({
+        field: "lock_timeout_ms",
+        type: "int",
+        allowNull: true,
+        comment: "If concurrency is set, this should be greater than the expected execution time of a task of this kind"
+    })
+    lockTimeoutMs: number;
 
     @CreatedAt
     @Column({
@@ -62,4 +71,7 @@ export class Kind extends Model implements PushDepKind {
 
     @HasMany(() => Task)
     tasks: Task[];
+
+    @HasMany(() => KindActivityLock)
+    kindActivityLocks: KindActivityLock[];
 }

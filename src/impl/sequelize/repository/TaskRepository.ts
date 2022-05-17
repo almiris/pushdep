@@ -13,7 +13,11 @@ export class TaskRepository extends GenericRepository<Task> {
     async findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction: Transaction | null, kindId: string, lock = false): Promise<Task> {
         return await this.repository.findOne({
             transaction: transaction,
-            lock: lock ? transaction.LOCK.UPDATE : false,
+            lock: lock ? transaction.LOCK.UPDATE /*{
+                level: transaction.LOCK.UPDATE,
+                // of: Task
+             }*/ : false,
+            skipLocked: lock ? true : false,
             where: {
                 [Op.and]: [{
                         kindId: kindId
