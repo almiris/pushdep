@@ -2,6 +2,7 @@ import "dotenv/config";
 import { Sequelize } from "sequelize-typescript";
 import { InMemoryPushDep } from "../impl/inmemory/InMemoryPushDep";
 import { Kind as SequelizeKind } from "../impl/sequelize/model/Kind.model";
+import { KindActivityLock as SequelizeKindActivityLock } from "../impl/sequelize/model/KindActivityLock.model";
 import { Task as SequelizeTask } from "../impl/sequelize/model/Task.model";
 import { TaskDependency as SequelizeTaskDependency } from "../impl/sequelize/model/TaskDependency.model";
 import { TaskExecution as SequelizeTaskExecution } from "../impl/sequelize/model/TaskExecution.model";
@@ -64,12 +65,15 @@ export async function beforeAllAsync(pushDepClass) {
             ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
             pool: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!,
             sync: { alter: false, force: false },
-            logging: (...msg) => console.log(msg), // true,
-            models: [SequelizeKind, SequelizeTask, SequelizeTaskExecution, SequelizeTaskDependency]
-        });         
+            logging: false,
+            // logging: (...msg) => console.log(msg), // true,
+            // repositoryMode: true,
+            models: [SequelizeKind, SequelizeKindActivityLock, SequelizeTask, SequelizeTaskExecution, SequelizeTaskDependency]
+        });
+        await sequelize.sync();
         pushDep = new SequelizePushDep(sequelize);
     }
-};
+}
 
 export async function afterAllAsync(pushDepClass) {
     if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
@@ -91,11 +95,12 @@ export async function beforeEachAsync(pushDepClass) {
         // await SequelizeTaskDependency.truncate({ force: true });
         await SequelizeTask.truncate({ force: true, cascade: true });
         await SequelizeKind.truncate({ force: true, cascade: true });
+        await SequelizeKindActivityLock.truncate({ force: true, cascade: true });
     }
     else if (PUSHDEP_CLASSES[pushDepClass] === InMemoryPushDep) {
         pushDep = new InMemoryPushDep();
     }
-    await pushDep.setKindAsync({ id: "a", concurrency: 3 });
+    await pushDep.setKindAsync({ id: "a", concurrency: 3, lockTimeoutMs: 1500 });
 }
 
 describe("One test to keep the .spec in this filename ;-)", () => {

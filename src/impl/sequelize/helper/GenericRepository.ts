@@ -29,4 +29,11 @@ export abstract class GenericRepository<M extends Model> {
             where: where
         });
     }
+
+    async deleteAsync(transaction: Transaction | null, where: WhereOptions<Attributes<M>>): Promise<number> {
+        return await this.repository.destroy({
+            transaction: transaction,
+            where: where
+        });
+    }
 }

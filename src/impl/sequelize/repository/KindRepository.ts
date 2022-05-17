@@ -16,4 +16,13 @@ export class KindRepository extends GenericRepository<Kind> {
             raw: true 
         });
     }
+
+    async findLockAsync(transaction: Transaction, kindId: string, lock: boolean): Promise<PushDepKind> {
+        return await this.repository.findByPk(kindId, { 
+            transaction: transaction,
+            lock: lock ? transaction.LOCK.UPDATE : false,
+            attributes: [ "id", "concurrency" ], 
+            raw: true 
+        });
+    }
 }

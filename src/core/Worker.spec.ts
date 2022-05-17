@@ -174,7 +174,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         await workerFoo.waitForTerminationAsync();
         await workerBar.waitForTerminationAsync();
 
-        expect(["012345", "013245"]).toContain(executionPath.join(""));
+        expect(["012345", "013245", "201345"]).toContain(executionPath.join(""));
         expect.assertions(1);
     }, 30000);
 });
