@@ -19,25 +19,19 @@ export class PushDepWorker {
     constructor(private pushDep: PushDep, private options: PushDepWorkerOptions, private worker: PushDepWorkerFunction) {}
 
     async startAsync(): Promise<void> {
-        try {
-            if (!this.isRunning) {
-                this.isRunning = true;
-                this.isTerminated = false;
-                while (this.isRunning) {
-                    const task = await this.pushDep.startAsync(this.options.kindId);
-                    if (!task) {
-                        await sleep(this.options.idleTimeoutMs);
-                    }
-                    else {
-                        await this.worker(this, task, this.pushDep);
-                    }
+        if (!this.isRunning) {
+            this.isRunning = true;
+            this.isTerminated = false;
+            while (this.isRunning) {
+                const task = await this.pushDep.startAsync(this.options.kindId);
+                if (!task) {
+                    await sleep(this.options.idleTimeoutMs);
                 }
-                this.isTerminated = true;
+                else {
+                    await this.worker(this, task, this.pushDep);
+                }
             }
-        }
-        catch (err) {
-            console.log("EEEEERRRRRROOOOOOOOOOORRRRRRR !!!!!");
-            console.error(err);
+            this.isTerminated = true;
         }
     }
 

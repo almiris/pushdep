@@ -37,7 +37,6 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         expect(task.id.length).toBe(36);
 
         const count = await pushDep.countAsync("a");
-        console.log(count);
         expect(count.pending).toBe(1);
         expect.assertions(3);
     });
@@ -81,9 +80,6 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
 
         expect(count.pending).toBe(5);
         expect.assertions(5);
-
-        console.log(JSON.stringify(task, null, 2));
-        console.log(count);
     });
 
     it('It should count tasks', async () => {

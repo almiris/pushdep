@@ -6,7 +6,14 @@ import { Task } from "./Task.model";
     underscored: true,
     freezeTableName: true,
     tableName: "task_dependency",
-    comment: "Tasks and their dependencies"
+    comment: "Tasks and their dependencies",
+    indexes: [{
+        name: "idx_task_dependency_task_id",
+        fields: ["task_id"]
+    }, {
+        name: "idx_task_dependency_dependency_id",
+        fields: ["dependency_id"]
+    }]
 })
 export class TaskDependency extends Model {
     @Column({

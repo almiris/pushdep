@@ -15,7 +15,17 @@ import { TaskExecution } from "./TaskExecution.model";
     updatedAt: "updatedAt",
     deletedAt: "deletedAt",
     version: "version",
-    comment: "A task of a kind will be executed by a worker"
+    comment: "A task of a kind will be executed by a worker",
+    indexes: [{
+        name: "idx_task_kind_id",
+        fields: ["kind_id"]
+    }, {
+        name: "idx_task_created_at",
+        fields: ["created_at"]
+    }, {
+        name: "idx_task_deleted_at",
+        fields: ["deleted_at"]
+    }]
 })
 export class Task extends Model implements PushDepTask {
     @PrimaryKey

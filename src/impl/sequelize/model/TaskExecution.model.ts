@@ -17,7 +17,17 @@ import { AutoIncrement, BelongsTo, Column, CreatedAt, DeletedAt, ForeignKey, Ind
     updatedAt: "updatedAt",
     deletedAt: "deletedAt",
     version: "version",
-    comment: "Tasks execution track the execution state of tasks"
+    comment: "Tasks execution track the execution state of tasks",
+    indexes: [{
+        name: "idx_task_execution_created_at",
+        fields: ["created_at"]
+    }, {
+        name: "idx_task_execution_deleted_at",
+        fields: ["deleted_at"]
+    }, {
+        name: "idx_task_execution_task_id",
+        fields: ["task_id"]
+    }]
 })
 export class TaskExecution extends Model implements PushDepTaskExecution {
     @PrimaryKey

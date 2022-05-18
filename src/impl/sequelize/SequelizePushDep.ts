@@ -90,56 +90,15 @@ class SequelizeTaskExecutionService {
         return await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(null, kindId);
     }
 
-    // async startAsync(kindId: string): Promise<PushDepTask> {
-    //     const concurrency = (await this.kindRepository.findAsync(null, kindId))?.concurrency || 1;
-    //     let task = null;
-    //     if (await this.taskRepository.countActiveTasks(null, kindId) < concurrency) {
-    //         task = await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
-    //             let task = null;
-    //             if (await this.taskRepository.countActiveTasks(transaction, kindId) < concurrency) {
-    //                 task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
-    //                 if (task) {
-    //                     await this.taskExecutionRepository.startAsync(transaction, task.id);
-    //                 }
-    //             }
-    //             return task;
-    //         });
-    //     }
-    //     return task;
-    // }
-
-    // async startAsync(kindId: string): Promise<PushDepTask> {
-    //     const lock = await this.sequelize.transaction<KindActivityLock>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<KindActivityLock> => {
-    //         const lock = await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
-    //         return lock;
-    //     });
-    //     if (lock) {
-    //         console.log("lock found");
-    //         return await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE}, async (transaction: Transaction): Promise<Task> => {
-    //             let task = null;
-    //             // const concurrency = (await this.kindRepository.findAsync(transaction, kindId))?.concurrency || 1;
-    //             // if (await this.taskRepository.countActiveTasks(transaction, kindId) < concurrency) {
-    //                 task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
-    //                 if (task) {
-    //                     await this.taskExecutionRepository.startAsync(transaction, task.id);
-    //                 }
-    //             // }
-    //             return task;
-    //         });
-    //         return null;
-    //     }
-    //     else {
-    //         console.log("no lock found");
-    //         return null;
-    //     }
-    // }
-
     async startAsync(kindId: string): Promise<PushDepTask> {
         const task = await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
             let task = null;
             const lock = await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
             if (lock) {
+                const start = new Date().getTime();
                 task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
+                const stop = new Date().getTime() - start;
+                console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await this.kindActivityLockRepository.reserveLockAsync(transaction, lock.id, task.id);
                     await this.taskExecutionRepository.startAsync(transaction, task.id);
@@ -150,41 +109,13 @@ class SequelizeTaskExecutionService {
         return task;
     }
 
-    // async startAsync(kindId: string): Promise<PushDepTask> {
-    //     const lock = await this.sequelize.transaction<KindActivityLock>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<KindActivityLock> => {
-    //         return await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
-    //     });
-    //     if (lock) {
-    //         return await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
-    //             let task = null;
-    //             task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
-    //             if (task) {
-    //                 await this.taskExecutionRepository.startAsync(transaction, task.id);
-    //             }
-    //             return task;
-    //         });
-    //     }
-    //     else {
-    //         return null;
-    //     }
-    // }
-
     async completeAsync(task: PushDepTask): Promise<void> {
-        console.log("completing");
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             const lock = await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.completed);
             await this.taskExecutionRepository.completeAsync(transaction, task.id)
         });
     }
-
-    // async completeAsync(task: PushDepTask): Promise<void> {
-    //     const lock = await this.sequelize.transaction<KindActivityLock>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<KindActivityLock> => {
-    //         return await this.kindActivityLockRepository.releaseOldestLockAsync(transaction, task.kindId);
-    //     });
-    //     await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.completed);
-    //     await this.taskExecutionRepository.completeAsync(null, task.id)
-    // }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
         await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.canceled);
