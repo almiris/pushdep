@@ -15,12 +15,13 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
     beforeEach(async () => await beforeEachAsync(pushDepClass));
 
     it('It should test pushing 100_000 tasks checking concurrency', async () => {
-        const numberOfTasks = 100_000;//100_000;
+        const numberOfRootTasks = 1000;//400;//100_000;
         const insertChunkSize = 40;
-        const numberOfWorkers = 60;
-        const concurrency = 40;
+        const numberOfWorkers = 40;
+        const concurrency = 30;
         const kindId = "a";
-        let numberOfRemainingTasks = numberOfTasks;
+        let totalNumberOfTasks = numberOfRootTasks * (1 + 5 + 5 * 5); // 1 root, 5 deps per root, 5 deps per dep
+        let numberOfRemainingTasks = totalNumberOfTasks;
         const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
             try {
                 await sleep(1000);
@@ -34,8 +35,16 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
 
         await pushDep.setKindAsync({ id: kindId, concurrency: concurrency, lockTimeoutMs: 5000 });
         
-        for (let i = 0; i < numberOfTasks / insertChunkSize; i++) {
-            const promises = new Array(insertChunkSize).fill(0).map(_ => pushDep.pushAsync({ kindId: kindId }));
+        for (let i = 0; i < numberOfRootTasks / insertChunkSize; i++) {
+            const promises = new Array(insertChunkSize).fill(0).map(_ => pushDep.pushAsync({ 
+                kindId: kindId,
+                dependencies: new Array(5).fill(0).map(() => ({ 
+                    kindId: kindId, 
+                    dependencies: new Array(5).fill(0).map(() => ({
+                        kindId: kindId
+                    }))
+                }))
+            }));
             await Promise.all(promises);
         }
 
@@ -65,10 +74,10 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         expect(count).toEqual({
             pending: 0,
             active: 0,
-            completed: numberOfTasks,
+            completed: totalNumberOfTasks,
             canceled: 0,
             failed: 0,
-            all: numberOfTasks
+            all: totalNumberOfTasks
         });
 
         for (let worker of workers) {

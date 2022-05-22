@@ -106,10 +106,32 @@ export class Task extends Model implements PushDepTask {
     @BelongsTo(() => Kind)
     kind: Kind;
 
-    @BelongsToMany(() => Task, () => TaskDependency, "dependencyId")
+    // @BelongsToMany(() => Task, () => TaskDependency, "dependencyId")
+    // dependencies: Task[];
+
+    // @BelongsToMany(() => Task, () => TaskDependency, "taskId")
+    // dependents: Task[];
+
+    @BelongsToMany(() => Task, {
+        through: {
+            model: () => TaskDependency,
+            unique: false
+        },
+        otherKey: "dependencyId"
+        // sourceKey: "id",
+        // targetKey: "dependency_id"
+    })
     dependencies: Task[];
 
-    @BelongsToMany(() => Task, () => TaskDependency, "taskId")
+    @BelongsToMany(() => Task, {
+        through: {
+            model: () => TaskDependency,
+            unique: false
+        },
+        otherKey: "taskId"
+        // sourceKey: "id",
+        // targetKey: "task_id"
+    })
     dependents: Task[];
 
     @HasMany(() => TaskExecution)

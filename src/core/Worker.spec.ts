@@ -174,7 +174,21 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         await workerFoo.waitForTerminationAsync();
         await workerBar.waitForTerminationAsync();
 
-        expect(["012345", "013245", "201345"]).toContain(executionPath.join(""));
-        expect.assertions(1);
+        const path = executionPath.join("");
+
+        expect(path.indexOf("0")).not.toBe(-1);
+        expect(path.indexOf("1")).not.toBe(-1);
+        expect(path.indexOf("2")).not.toBe(-1);
+        expect(path.indexOf("3")).not.toBe(-1);
+        expect(path.indexOf("4")).not.toBe(-1);
+        expect(path.indexOf("5")).not.toBe(-1);
+        expect(path.indexOf("3")).toBeGreaterThan(path.indexOf("0"));
+        expect(path.indexOf("3")).toBeGreaterThan(path.indexOf("1"));
+        expect(path.indexOf("4")).toBeGreaterThan(path.indexOf("1"));
+        expect(path.indexOf("4")).toBeGreaterThan(path.indexOf("2"));
+        expect(path.indexOf("5")).toBeGreaterThan(path.indexOf("3"));
+        expect(path.indexOf("5")).toBeGreaterThan(path.indexOf("4"));
+
+        expect.assertions(12);
     }, 30000);
 });
