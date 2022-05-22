@@ -89,6 +89,11 @@ a max execution time; if now - last state time > max execution time, then clean(
 - Worker auto stop - worker would automatically stop as soon as their is no more task of the worker's kind available
 - Add indexes (for example, taskexecution.state, task.priority)
 - findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync is not optimized and will not work with a lot of tasks and dependencies. To optimize, a dependency should update its parent once completed / canceled or failed. Two ways of doing this : 1/ one a dependency is updated, its parent dependencies state is checked and a parent flag is updated, for example "readyToStart" or a dependency "completed" counter is incremented, and the parent can start one the counter is equal to the parent's dependencies count (which could be a field of task); a task may have no dependencies
+- Add tag
+- Move args and results in a dedicated task_data table
+- Add uuid to task and use a bigint (Sequelize.BIGINT) + @AutoIncrement (or autoIncrement = true if problem) for task.id and the task_dependency table (the idea is to optimize the size of the indexes). Add an index to uuid
+task_dependency 5.4M => pkey 1.9M
+task 6.4M => pkey 1.2M
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
@@ -108,3 +113,4 @@ WHERE
 	pg_stat_activity.datname = '<database>'
 	AND pid <> pg_backend_pid();
 
+npm publish pushdep --access public --dry-run 
