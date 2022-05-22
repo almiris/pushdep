@@ -33,7 +33,7 @@ export class TaskExecution extends Model implements PushDepTaskExecution {
     @PrimaryKey
     @AutoIncrement
     @Column({
-        field: "id",
+        field: "id"
         // type: "int" // conflicts with @AutoIncrement which set the SERIAL type
     })
     id: number;
@@ -62,7 +62,7 @@ export class TaskExecution extends Model implements PushDepTaskExecution {
         allowNull: true,
     })
     completedAt: Date;
-
+ 
     @Column({
         field: "canceled_at",
         type: "timestamp with time zone",

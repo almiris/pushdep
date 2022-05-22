@@ -1,4 +1,4 @@
-import { BelongsTo, Column, ForeignKey, Model, Table } from "sequelize-typescript";
+import { AutoIncrement, BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Kind } from "./Kind.model";
 import { Task } from "./Task.model";
 
@@ -11,6 +11,14 @@ import { Task } from "./Task.model";
     comment: "A lock table used to implement kind concurrency"
 })
 export class KindActivityLock extends Model {
+    @PrimaryKey
+    @AutoIncrement
+    @Column({
+        field: "id"
+        // type: "int" // conflicts with @AutoIncrement which set the SERIAL type
+    })
+    id: number;
+
     @Column({
         field: "locked_at",
         type: "timestamp with time zone",
