@@ -5,7 +5,6 @@ import { Kind as SequelizeKind } from "../impl/sequelize/model/Kind.model";
 import { KindActivityLock as SequelizeKindActivityLock } from "../impl/sequelize/model/KindActivityLock.model";
 import { Task as SequelizeTask } from "../impl/sequelize/model/Task.model";
 import { TaskDependency as SequelizeTaskDependency } from "../impl/sequelize/model/TaskDependency.model";
-import { TaskExecution as SequelizeTaskExecution } from "../impl/sequelize/model/TaskExecution.model";
 import { SequelizePushDep } from "../impl/sequelize/SequelizePushDep";
 import { PushDep, PushDepTask } from "./PushDep";
 import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
@@ -31,7 +30,7 @@ xdescribe('Worker tests using $pushDepClass pushDep', () => {
             logging: false,
             // logging: (...msg) => console.log(msg), // true,
             // repositoryMode: true,
-            models: [SequelizeKind, SequelizeKindActivityLock, SequelizeTask, SequelizeTaskExecution, SequelizeTaskDependency]
+            models: [SequelizeKind, SequelizeKindActivityLock, SequelizeTask, SequelizeTaskDependency]
         });
         await sequelize.sync();
 

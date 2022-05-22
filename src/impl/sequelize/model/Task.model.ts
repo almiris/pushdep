@@ -1,9 +1,8 @@
-import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Index, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
+import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { PushDepTask } from "../../../core/PushDep";
 import { Kind } from "./Kind.model";
 import { KindActivityLock } from "./KindActivityLock.model";
 import { TaskDependency } from "./TaskDependency.model";
-import { TaskExecution } from "./TaskExecution.model";
 
 @Table({
     timestamps: true,
@@ -17,14 +16,29 @@ import { TaskExecution } from "./TaskExecution.model";
     version: "version",
     comment: "A task of a kind will be executed by a worker",
     indexes: [{
+        name: "idx_task_priority",
+        fields: ["priority"]
+    }, {
         name: "idx_task_kind_id",
         fields: ["kind_id"]
+    }, {
+        name: "idx_task_state",
+        fields: ["state"]
     }, {
         name: "idx_task_created_at",
         fields: ["created_at"]
     }, {
         name: "idx_task_deleted_at",
         fields: ["deleted_at"]
+    }, {
+        name: "idx_task_priority_created_at",
+        fields: [{
+            name: "priority",
+            order: "DESC"
+        }, {
+            name: "created_at",
+            order: "ASC"
+        }]
     }]
 })
 export class Task extends Model implements PushDepTask {
@@ -41,9 +55,6 @@ export class Task extends Model implements PushDepTask {
         type: "int",
         allowNull: false,
         comment: "Priority of the task"
-    })
-    @Index({
-        name: "idx_task_priority"
     })
     priority: number;
 
@@ -62,7 +73,43 @@ export class Task extends Model implements PushDepTask {
         comment: "Results of the task"
     })
     results: any;
-          
+
+    @Column({
+        field: "state",
+        type: "int",
+        allowNull: false,
+        comment: "State of this execution"
+    })
+    state: number;
+
+    @Column({
+        field: "started_at",
+        type: "timestamp with time zone",
+        allowNull: true,
+    })
+    startedAt: Date;
+
+    @Column({
+        field: "completed_at",
+        type: "timestamp with time zone",
+        allowNull: true,
+    })
+    completedAt: Date;
+ 
+    @Column({
+        field: "canceled_at",
+        type: "timestamp with time zone",
+        allowNull: true,
+    })
+    canceledAt: Date;
+
+    @Column({
+        field: "failed_at",
+        type: "timestamp with time zone",
+        allowNull: true,
+    })
+    failedAt: Date;
+
     @CreatedAt
     @Column({
         field: "created_at",
@@ -106,20 +153,12 @@ export class Task extends Model implements PushDepTask {
     @BelongsTo(() => Kind)
     kind: Kind;
 
-    // @BelongsToMany(() => Task, () => TaskDependency, "dependencyId")
-    // dependencies: Task[];
-
-    // @BelongsToMany(() => Task, () => TaskDependency, "taskId")
-    // dependents: Task[];
-
     @BelongsToMany(() => Task, {
         through: {
             model: () => TaskDependency,
             unique: false
         },
         otherKey: "dependencyId"
-        // sourceKey: "id",
-        // targetKey: "dependency_id"
     })
     dependencies: Task[];
 
@@ -129,13 +168,8 @@ export class Task extends Model implements PushDepTask {
             unique: false
         },
         otherKey: "taskId"
-        // sourceKey: "id",
-        // targetKey: "task_id"
     })
     dependents: Task[];
-
-    @HasMany(() => TaskExecution)
-    taskExecutions: TaskExecution[];
 
     @HasMany(() => KindActivityLock)
     kindActivityLocks: KindActivityLock[];
