@@ -87,7 +87,7 @@ class SequelizeTaskExecutionService {
 
     async startAsync(kindId: string): Promise<PushDepTask> {
         const task = await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
-            let task = null;
+            let task: Task = null;
             const lock = await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
             if (lock) {
                 const start = new Date().getTime();

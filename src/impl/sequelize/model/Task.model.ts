@@ -1,4 +1,4 @@
-import { BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
+import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { PushDepTask } from "../../../core/PushDep";
 import { Kind } from "./Kind.model";
 import { KindActivityLock } from "./KindActivityLock.model";
@@ -45,10 +45,20 @@ export class Task extends Model implements PushDepTask {
     @PrimaryKey
     @Column({
         field: "id",
-        type: "uuid",
-        defaultValue: DataType.UUIDV4
+        type: "bigint",
+        autoIncrement: true,
+        autoIncrementIdentity: true
     })
-    id: string;
+    id: string; // https://stackoverflow.com/questions/39168501/pg-promise-returns-integers-as-strings
+
+    @Column({
+        field: "uuid",
+        type: "uuid",
+        defaultValue: DataType.UUIDV4,
+        allowNull: false,
+        comment: "External id of the task"
+    })
+    uuid: string;
 
     @Column({
         field: "priority",

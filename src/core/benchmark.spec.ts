@@ -15,7 +15,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
     beforeEach(async () => await beforeEachAsync(pushDepClass));
 
     it('It should test pushing 100_000 tasks checking concurrency', async () => {
-        const numberOfRootTasks = 1000;//400;//100_000;
+        const numberOfRootTasks = 10_000;//400;//100_000;
         const insertChunkSize = 40;
         const numberOfWorkers = 40;
         const concurrency = 30;

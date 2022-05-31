@@ -1,5 +1,5 @@
+import { Attributes, Transaction, WhereOptions } from "sequelize";
 import { Model, Repository } from "sequelize-typescript";
-import { Attributes, Includeable, Transaction, WhereOptions } from "sequelize";
 
 export abstract class GenericRepository<M extends Model> {
     constructor(protected repository: Repository<M>) {
