@@ -34,7 +34,7 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         });
 
         expect(task.id).not.toBeNull();
-        expect(task.id.length).toBe(36);
+        expect(isNaN(task.id as any)).toBeFalsy();
 
         const count = await pushDep.countAsync("a");
         expect(count.pending).toBe(1);
@@ -62,7 +62,7 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         const task00Id = task0.dependencies[0].id;
 
         expect(task00Id).not.toBeNull();
-        expect(task00Id.length).toBe(36);
+        expect(isNaN(task00Id as any)).toBeFalsy();
 
         const task = await pushDep.pushAsync({
             kindId: "a", dependencies: [{

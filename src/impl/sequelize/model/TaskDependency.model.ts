@@ -26,7 +26,7 @@ export class TaskDependency extends Model {
 
     @Column({
         field: "task_id",
-        type: "uuid",
+        type: "bigint",
         allowNull: false
     })
     @ForeignKey(() => Task)
@@ -34,7 +34,7 @@ export class TaskDependency extends Model {
 
     @Column({
         field: "dependency_id",
-        type: "uuid",
+        type: "bigint",
         allowNull: false
     })
     @ForeignKey(() => Task)

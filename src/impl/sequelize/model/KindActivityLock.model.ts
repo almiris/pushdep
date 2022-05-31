@@ -12,10 +12,11 @@ import { Task } from "./Task.model";
 })
 export class KindActivityLock extends Model {
     @PrimaryKey
-    @AutoIncrement
     @Column({
-        field: "id"
-        // type: "int" // conflicts with @AutoIncrement which set the SERIAL type
+        field: "id",
+        type: "int",
+        autoIncrement: true,
+        autoIncrementIdentity: true
     })
     id: number;
 
@@ -40,7 +41,7 @@ export class KindActivityLock extends Model {
     @ForeignKey(() => Task)
     @Column({
         field: "task_id",
-        type: "uuid",
+        type: "bigint",
         allowNull: true
     })
     taskId: string;
