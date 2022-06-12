@@ -31,8 +31,11 @@ import { TaskDependency } from "./TaskDependency.model";
         name: "idx_task_deleted_at",
         fields: ["deleted_at"]
     }, {
-        name: "idx_task_priority_created_at",
+        name: "idx_task_state_priority_created_at",
         fields: [{
+            name: "state",
+            order: "ASC"
+        },{
             name: "priority",
             order: "DESC"
         }, {
