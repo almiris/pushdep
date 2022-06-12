@@ -17,14 +17,14 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
     it('It should test pushing 100_000 tasks checking concurrency', async () => {
         const numberOfRootTasks = 10_000;//400;//100_000;
         const insertChunkSize = 40;
-        const numberOfWorkers = 40;
-        const concurrency = 30;
+        const numberOfWorkers = 120;
+        const concurrency = 120;
         const kindId = "a";
         let totalNumberOfTasks = numberOfRootTasks * (1 + 5 + 5 * 5); // 1 root, 5 deps per root, 5 deps per dep
         let numberOfRemainingTasks = totalNumberOfTasks;
         const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
             try {
-                await sleep(1000);
+                // await sleep(10);
                 await pushDep.completeAsync(task);
                 numberOfRemainingTasks--;
             }
@@ -59,15 +59,19 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         });
 
         while (numberOfRemainingTasks) {
-            const count = await pushDep.countAsync(kindId);
-            if (count.active > concurrency) {
-                throw new Error(`Illegal concurrency state: ${count.active}`);
-            }
-            console.log(`remaining: ${numberOfRemainingTasks} number of active tasks: ${count.active}`);
             // if (numberOfRemainingTasks % 1000 == 0) {
-            //     console.log(`remaining: ${numberOfRemainingTasks} number of active tasks: ${count.active}`);
+                const count = await pushDep.countAsync(kindId);
+                if (count.active > concurrency) {
+                    throw new Error(`Illegal concurrency state: ${count.active}`);
+                }
+                console.log(`remaining: ${numberOfRemainingTasks} number of active tasks: ${count.active}`);
+                // if (numberOfRemainingTasks % 1000 == 0) {
+                //     console.log(`remaining: ${numberOfRemainingTasks} number of active tasks: ${count.active}`);
+                // }
+            //     }
+            // else {
+                await sleep(200);
             // }
-            await sleep(100);
         }
 
         const count = await pushDep.countAsync(kindId);
@@ -89,5 +93,5 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         }
 
         expect.assertions(1);
-    }, 5_000_000);
+    }, 50_000_000);
 });
