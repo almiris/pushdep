@@ -13,7 +13,7 @@ export class TaskRepository extends GenericRepository<Task> {
         if (lock) {
             queryBuilder.setLock("pessimistic_write")
         }
-        return await queryBuilder.innerJoin("task.taskExecutions", "taskExecutions", "task.kindId = :kindId and taskExecutions.state = :state", { kindId: kindId, state: PushDepExecutionState.pending })
+        return /* await */ queryBuilder.innerJoin("task.taskExecutions", "taskExecutions", "task.kindId = :kindId and taskExecutions.state = :state", { kindId: kindId, state: PushDepExecutionState.pending })
             .where((qb) => {
                 return `${qb
                     .subQuery()
@@ -28,7 +28,7 @@ export class TaskRepository extends GenericRepository<Task> {
     }
 
     async countActiveTasks(kindId: string): Promise<number> {
-        return await this.repository
+        return /* await */ this.repository
             .createQueryBuilder("task")
             .innerJoin("task.taskExecutions", "taskExecutions", "task.kindId = :kindId and taskExecutions.state = :state", { kindId: kindId, state: PushDepExecutionState.active })
             .getCount();

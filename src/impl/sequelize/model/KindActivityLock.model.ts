@@ -1,4 +1,4 @@
-import { AutoIncrement, BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
+import { BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Kind } from "./Kind.model";
 import { Task } from "./Task.model";
 
@@ -8,7 +8,14 @@ import { Task } from "./Task.model";
     underscored: true,
     freezeTableName: true,
     tableName: "kind_activity_lock",
-    comment: "A lock table used to implement kind concurrency"
+    comment: "A lock table used to implement kind concurrency",
+    indexes: [{
+        name: "idx_kind_activity_lock_kind_id",
+        fields: ["kind_id"]
+    }/*, {
+        name: "idx_kind_activity_lock_task_id",
+        fields: ["task_id"]
+    }*/]
 })
 export class KindActivityLock extends Model {
     @PrimaryKey

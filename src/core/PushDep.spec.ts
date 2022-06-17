@@ -3,11 +3,11 @@ import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEP
 
 describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
-    beforeAll(async () => await beforeAllAsync(pushDepClass));
+    beforeAll(async () => /* await */ beforeAllAsync(pushDepClass));
 
-    afterAll(async () => await afterAllAsync(pushDepClass));
+    afterAll(async () => /* await */ afterAllAsync(pushDepClass));
 
-    beforeEach(async () => await beforeEachAsync(pushDepClass));
+    beforeEach(async () => /* await */ beforeEachAsync(pushDepClass));
 
     it('It should set then get a kind', async () => {
         await pushDep.setKindAsync({ id: "b", concurrency: 3 });
@@ -34,7 +34,7 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         });
 
         expect(task.id).not.toBeNull();
-        expect(isNaN(task.id as any)).toBeFalsy();
+        expect(task.id.length > 0).toBeTruthy();
 
         const count = await pushDep.countAsync("a");
         expect(count.pending).toBe(1);
@@ -62,9 +62,9 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         const task00Id = task0.dependencies[0].id;
 
         expect(task00Id).not.toBeNull();
-        expect(isNaN(task00Id as any)).toBeFalsy();
+        expect(task00Id.length > 0).toBeTruthy();
 
-        const task = await pushDep.pushAsync({
+        await pushDep.pushAsync({
             kindId: "a", dependencies: [{
                 kindId: "a",
                 dependencies: [{
@@ -183,6 +183,8 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
             all: 1
         });
 
+        console.log(task);
+        console.log("kind", task.kindId);
         await pushDep.completeAsync(task);
 
         count = await pushDep.countAsync("a");

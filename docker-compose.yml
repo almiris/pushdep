@@ -1,0 +1,25 @@
+services:
+  database:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5432:5432'
+    volumes: 
+      - database:/var/lib/postgresql/data
+    command: postgres -c 'max_connections=250' -c 'shared_buffers=256MB'
+volumes:
+  database:
+    driver: local
+
+# psql postgres
+# postgres=# create role postgres with login password 'postgres';
+# postgres-# GRANT ALL PRIVILEGES ON DATABASE postgres to postgres;
+# https://pgtune.leopard.in.ua/
+# alter database postgres owner to postgres;
+# alter schema public owner to postgres;
+# brew services start postgresql
+# brew services stop postgresql
+# brew services restart postgresql

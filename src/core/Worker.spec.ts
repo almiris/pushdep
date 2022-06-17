@@ -145,7 +145,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         let numberOfTasks = 6;
         const executionPath = [];
 
-        const workerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+        const workerFunction = async (_worker: PushDepWorker, task: PushDepTask, _pushDep: PushDep) => {
             executionPath.push(task.args.step);
             await pushDep.completeAsync(task);
             numberOfTasks--;

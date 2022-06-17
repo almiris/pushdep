@@ -1,30 +1,30 @@
 import { v4 as uuidv4 } from "uuid";
-import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution, PushDepTaskExecutionBuilder } from "../../core/PushDep";
+import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "../../core/PushDep";
 
 type KindsMappedByKind = Record<string, PushDepKind>;
 
-type TaskExecutionsMappedByTaskId = Record<string, PushDepTaskExecution>;
+type TasksMappedByTaskId = Record<string, InMemoryTask>;
 
-type TaskExecutionsMappedByTaskKindOrderedByPushTime = Record<string, PushDepTaskExecution[]>;
+type TasksMappedByTaskKindOrderedByPushTime = Record<string, InMemoryTask[]>;
 
-type TaskExecutionsMappedByTaskKindMappedByTaskId = Record<string, TaskExecutionsMappedByTaskId>;
+type TasksMappedByTaskKindMappedByTaskId = Record<string, TasksMappedByTaskId>;
 
-type TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime = Record<string, TaskExecutionsMappedByTaskKindOrderedByPushTime>;
+type TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime = Record<string, TasksMappedByTaskKindOrderedByPushTime>;
 
-type TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId = Record<string, TaskExecutionsMappedByTaskKindMappedByTaskId>;
+type TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId = Record<string, TasksMappedByTaskKindMappedByTaskId>;
 
-interface InMemoryTask extends PushDepTask {
+interface InMemoryTask extends PushDepTask, PushDepTaskExecution {
     id: string;
 }
 
-class InMemoryTaskExecutionService {
+class InMemoryTaskService {
     kinds: KindsMappedByKind = {};
-    pendingTaskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime = {};
-    activeTaskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
-    completedTaskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
-    canceledTaskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
-    failedTaskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
-    allTaskExecutions: TaskExecutionsMappedByTaskId = {};
+    pendingTasks: TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime = {};
+    activeTasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
+    completedTasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
+    canceledTasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
+    failedTasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId = {};
+    allTasks: TasksMappedByTaskId = {};
 
     setKind(kind: PushDepKind): void {
         this.kinds[kind.id] = kind;
@@ -35,44 +35,45 @@ class InMemoryTaskExecutionService {
     }
 
     push(task: PushDepTask): PushDepTask {
-        return this.doPush(task);
+        return this.doPush(task as InMemoryTask);
     }
 
-    doPush(task: PushDepTask): PushDepTask {
+    doPush(task: InMemoryTask): InMemoryTask {
         if (!task.id) {
-            (task as InMemoryTask).id = uuidv4();
-            task.dependencies = this.doPushDependencies(task.dependencies);
+            task.id= uuidv4();
+            task.dependencies = this.doPushDependencies(task.dependencies as InMemoryTask[]);
             task.priority = task.priority || 1;
-            const taskExecution = PushDepTaskExecutionBuilder.build(task);
-            this.doPushMappedByTaskKindOrderedByPushTime(taskExecution, this.pendingTaskExecutions);
-            this.allTaskExecutions[task.id] = taskExecution;
+            task.state = PushDepExecutionState.pending;
+            task.createdAt = new Date();
+            this.doPushMappedByTaskKindOrderedByPushTime(task, this.pendingTasks);
+            this.allTasks[task.id] = task;
         } 
         return task;
     }
 
-    doPushMappedByTaskKindOrderedByPushTime(taskExecution: PushDepTaskExecution, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime): void {
-        this.ensurePriorityAndKind(taskExecution, taskExecutions);
-        taskExecutions[taskExecution.task.priority][taskExecution.task.kindId].push(taskExecution);
+    doPushMappedByTaskKindOrderedByPushTime(task: InMemoryTask, tasks: TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime): void {
+        this.ensurePriorityAndKind(task, tasks);
+        tasks[task.priority][task.kindId].push(task);
     }
 
-    doPushMappedByTaskKindMappedByTaskId(taskExecution: PushDepTaskExecution, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId): void {
-        this.ensurePriorityAndKind(taskExecution, taskExecutions);
-        taskExecutions[taskExecution.task.priority][taskExecution.task.kindId][taskExecution.task.id] = taskExecution;
+    doPushMappedByTaskKindMappedByTaskId(task: InMemoryTask, tasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId): void {
+        this.ensurePriorityAndKind(task, tasks);
+        tasks[task.priority][task.kindId][task.id] = task;
     }
 
-    ensurePriorityAndKind(taskExecution: PushDepTaskExecution, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime | TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId): void {
-        const priority = String(taskExecution.task.priority);
-        const kindId = taskExecution.task.kindId;
-        taskExecutions[priority] = taskExecutions[priority] || {};
-        taskExecutions[priority][kindId] = taskExecutions[priority][kindId] || [];
+    ensurePriorityAndKind(task: InMemoryTask, tasks: TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime | TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId): void {
+        const priority = String(task.priority);
+        const kindId = task.kindId;
+        tasks[priority] = tasks[priority] || {};
+        tasks[priority][kindId] = tasks[priority][kindId] || [];
     }
 
-    doPushDependencies(dependencies?: PushDepTask[]): PushDepTask[] {
+    doPushDependencies(dependencies?: InMemoryTask[]): InMemoryTask[] {
         if (!dependencies) {
             return null;
         }
 
-        const tasks: PushDepTask[] = [];
+        const tasks: InMemoryTask[] = [];
         for (const task of dependencies) {
             tasks.push(task.id ? task : this.doPush(task));
         }
@@ -81,47 +82,44 @@ class InMemoryTaskExecutionService {
 
     count(kindId: string): PushDepTaskCount {
         const count: PushDepTaskCount = {
-            pending: this.countMappedByTaskKindOrderedByPushTime(kindId, this.pendingTaskExecutions),
-            active: this.countMappedByTaskKindMappedByTaskId(kindId, this.activeTaskExecutions),
-            completed: this.countMappedByTaskKindMappedByTaskId(kindId, this.completedTaskExecutions),
-            canceled: this.countMappedByTaskKindMappedByTaskId(kindId, this.canceledTaskExecutions),
-            failed: this.countMappedByTaskKindMappedByTaskId(kindId, this.failedTaskExecutions),
+            pending: this.countMappedByTaskKindOrderedByPushTime(kindId, this.pendingTasks),
+            active: this.countMappedByTaskKindMappedByTaskId(kindId, this.activeTasks),
+            completed: this.countMappedByTaskKindMappedByTaskId(kindId, this.completedTasks),
+            canceled: this.countMappedByTaskKindMappedByTaskId(kindId, this.canceledTasks),
+            failed: this.countMappedByTaskKindMappedByTaskId(kindId, this.failedTasks),
             all: 0
         };
         count.all = count.pending + count.active + count.completed + count.canceled + count.failed;
         return count;
     }
 
-    countMappedByTaskKindOrderedByPushTime(kindId: string, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime): number {
-        return Object.keys(taskExecutions).reduce((result: number, priority: string) => 
-            result + (taskExecutions[priority][kindId]?.length || 0), 0);
+    countMappedByTaskKindOrderedByPushTime(kindId: string, tasks: TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime): number {
+        return Object.keys(tasks).reduce((result: number, priority: string) => 
+            result + (tasks[priority][kindId]?.length || 0), 0);
     }
 
-    countMappedByTaskKindMappedByTaskId(kindId: string, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindMappedByTaskId): number {
-        return Object.keys(taskExecutions).reduce((result: number, priority: string) => 
-            result + (taskExecutions[priority][kindId] ? Object.keys(taskExecutions[priority][kindId]).length : 0), 0);
+    countMappedByTaskKindMappedByTaskId(kindId: string, tasks: TasksMappedByTaskPriorityMappedByTaskKindMappedByTaskId): number {
+        return Object.keys(tasks).reduce((result: number, priority: string) => 
+            result + (tasks[priority][kindId] ? Object.keys(tasks[priority][kindId]).length : 0), 0);
     }
 
     peek(kindId: string): PushDepTask {
-        return this.findByKind(kindId, this.pendingTaskExecutions, false)?.task || null;
+        return this.findByKind(kindId, this.pendingTasks, false) as PushDepTask;
     }
 
-    findByKind(kindId: string, taskExecutions: TaskExecutionsMappedByTaskPriorityMappedByTaskKindOrderedByPushTime, pop = false): PushDepTaskExecution {
-        const priorities = Object.keys(taskExecutions);
-        if (priorities.length !== 0) {
-            const prioritiesDesc = priorities.map(p => Number(p)).sort((a, b) => b - a);
-            for (const priority of prioritiesDesc) {
-                const taskExecutionsForPriorityAndKind: PushDepTaskExecution[] = taskExecutions[priority][kindId];
-                if (taskExecutionsForPriorityAndKind) {
-                    const index = taskExecutionsForPriorityAndKind.findIndex((taskExecution: PushDepTaskExecution) => !taskExecution.task.dependencies 
-                    || taskExecution.task.dependencies.every(task => !this.allTaskExecutions[task.id] || (this.allTaskExecutions[task.id].state !== PushDepExecutionState.pending && this.allTaskExecutions[task.id].state !== PushDepExecutionState.active)));
-                    if (index !== -1) {
-                        const taskExecution = taskExecutionsForPriorityAndKind[index];
-                        if (pop) {
-                            taskExecutionsForPriorityAndKind.splice(index, 1);
-                        }
-                        return taskExecution;
+    findByKind(kindId: string, tasks: TasksMappedByTaskPriorityMappedByTaskKindOrderedByPushTime, pop = false): InMemoryTask {
+        const prioritiesDesc = Object.keys(tasks).map(p => Number(p)).sort((a, b) => b - a);
+        for (const priority of prioritiesDesc) {
+            const tasksForPriorityAndKind: InMemoryTask[] = tasks[priority][kindId];
+            if (tasksForPriorityAndKind) {
+                const index = tasksForPriorityAndKind.findIndex((task: InMemoryTask) => !task.dependencies 
+                || task.dependencies.every(t => !this.allTasks[t.id] || (this.allTasks[t.id].state !== PushDepExecutionState.pending && this.allTasks[t.id].state !== PushDepExecutionState.active)));
+                if (index !== -1) {
+                    const task = tasksForPriorityAndKind[index];
+                    if (pop) {
+                        tasksForPriorityAndKind.splice(index, 1);
                     }
+                    return task;
                 }
             }
         }
@@ -131,8 +129,8 @@ class InMemoryTaskExecutionService {
     start(kindId: string): PushDepTask {
         const concurrency = this.kinds[kindId]?.concurrency;
         let task: PushDepTask = null;
-        if (this.countMappedByTaskKindMappedByTaskId(kindId, this.activeTaskExecutions) < concurrency) {
-            task = this.findByKind(kindId, this.pendingTaskExecutions, true)?.task || null;
+        if (this.countMappedByTaskKindMappedByTaskId(kindId, this.activeTasks) < concurrency) {
+            task = this.findByKind(kindId, this.pendingTasks, true);
             if (task) {
                 this.changeTaskExecutionState(task, PushDepExecutionState.active);
             }
@@ -162,91 +160,90 @@ class InMemoryTaskExecutionService {
      * @param state 
      */
     changeTaskExecutionState(task: PushDepTask, state: PushDepExecutionState): void {
-        const taskExecution = this.allowTaskExecutionStateTransition(task, state);
-        if (taskExecution.state === PushDepExecutionState.active) { // deleting a pending task is already done by start()
-            delete this.activeTaskExecutions[task.priority][task.kindId][task.id];
+        const t = this.allowTaskExecutionStateTransition(task, state);
+        if (t.state === PushDepExecutionState.active) { // deleting a pending task is already done by start()
+            delete this.activeTasks[task.priority][task.kindId][task.id];
         }
-        taskExecution.state = state;
-        taskExecution.task = task;
+        t.state = state;
         switch (state) {
             case PushDepExecutionState.pending: 
-                taskExecution.startedAt = null;
-                taskExecution.completedAt = null;
-                taskExecution.canceledAt = null;
-                taskExecution.failedAt = null;
-                this.doPushMappedByTaskKindOrderedByPushTime(taskExecution, this.pendingTaskExecutions);
+                t.startedAt = null;
+                t.completedAt = null;
+                t.canceledAt = null;
+                t.failedAt = null;
+                this.doPushMappedByTaskKindOrderedByPushTime(t, this.pendingTasks);
                 break;
             case PushDepExecutionState.active: 
-                taskExecution.startedAt = new Date();
-                this.doPushMappedByTaskKindMappedByTaskId(taskExecution, this.activeTaskExecutions);
+                t.startedAt = new Date();
+                this.doPushMappedByTaskKindMappedByTaskId(t, this.activeTasks);
                 break;
             case PushDepExecutionState.completed: 
-                taskExecution.completedAt = new Date();
-                this.doPushMappedByTaskKindMappedByTaskId(taskExecution, this.completedTaskExecutions);
+                t.completedAt = new Date();
+                this.doPushMappedByTaskKindMappedByTaskId(t, this.completedTasks);
                 break;
             case PushDepExecutionState.canceled: 
-                taskExecution.canceledAt = new Date();
-                this.doPushMappedByTaskKindMappedByTaskId(taskExecution, this.canceledTaskExecutions);
+                t.canceledAt = new Date();
+                this.doPushMappedByTaskKindMappedByTaskId(t, this.canceledTasks);
                 break;
             case PushDepExecutionState.failed: 
-                taskExecution.failedAt = new Date();
-                this.doPushMappedByTaskKindMappedByTaskId(taskExecution, this.failedTaskExecutions);
+                t.failedAt = new Date();
+                this.doPushMappedByTaskKindMappedByTaskId(t, this.failedTasks);
                 break;
         }
     }
 
-    allowTaskExecutionStateTransition(task: PushDepTask, state: PushDepExecutionState): PushDepTaskExecution {
-        const taskExecution = this.allTaskExecutions[task.id];
-        if (!taskExecution) {
+    allowTaskExecutionStateTransition(task: PushDepTask, state: PushDepExecutionState): InMemoryTask {
+        const t = this.allTasks[task.id];
+        if (!t) {
             throw new Error(`Illegal state for task ${task.id}`);
         }
-        if (!AllowedStateTransitions[taskExecution.state]?.includes(state)) {
-            throw new Error(`Illegal state transition: ${PushDepExecutionState[taskExecution.state]} -> ${PushDepExecutionState[state]}`);
+        if (!AllowedStateTransitions[t.state]?.includes(state)) {
+            throw new Error(`Illegal state transition: ${PushDepExecutionState[t.state]} -> ${PushDepExecutionState[state]}`);
         }
-        return taskExecution;
+        return t;
     }
 }
 
 export class InMemoryPushDep implements PushDep {
-    taskExecutionService: InMemoryTaskExecutionService = new InMemoryTaskExecutionService();
+    taskService: InMemoryTaskService = new InMemoryTaskService();
 
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        this.taskExecutionService.setKind(kind);
+        this.taskService.setKind(kind);
     }
 
     async getKindAsync(kindId: string): Promise<PushDepKind> {
-        return this.taskExecutionService.getKind(kindId);
+        return this.taskService.getKind(kindId);
     }
 
     async pushAsync(task: PushDepTask): Promise<PushDepTask> {
-        return this.taskExecutionService.push(task);
+        return this.taskService.push(task);
     }
 
     async countAsync(kindId: string): Promise<PushDepTaskCount> {
-        return this.taskExecutionService.count(kindId);
+        return this.taskService.count(kindId);
     }
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
-        return this.taskExecutionService.peek(kindId);
+        return this.taskService.peek(kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        return this.taskExecutionService.start(kindId);
+        return this.taskService.start(kindId);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        this.taskExecutionService.complete(task);
+        this.taskService.complete(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        this.taskExecutionService.cancel(task);
+        this.taskService.cancel(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        this.taskExecutionService.fail(task);
+        this.taskService.fail(task);
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        this.taskExecutionService.return(task);
+        this.taskService.return(task);
     }
 }
