@@ -19,6 +19,9 @@ import { TaskDependency } from "./TaskDependency.model";
         name: "idx_task_priority",
         fields: ["priority"]
     }, {
+        name: "idx_task_tag",
+        fields: ["tag"]
+    }, {
         name: "idx_task_kind_id",
         fields: ["kind_id"]
     }, {
@@ -55,21 +58,20 @@ export class Task extends Model implements PushDepTask {
     id: string; // https://stackoverflow.com/questions/39168501/pg-promise-returns-integers-as-strings
 
     @Column({
-        field: "uuid",
-        type: "uuid",
-        defaultValue: DataType.UUIDV4,
-        allowNull: false,
-        comment: "External id of the task"
-    })
-    uuid: string;
-
-    @Column({
         field: "priority",
         type: "int",
         allowNull: false,
         comment: "Priority of the task"
     })
     priority: number;
+
+    @Column({
+        field: "tag",
+        type: "text",
+        allowNull: true,
+        comment: "Tag of the task"
+    })
+    tag: string;
 
     @Column({
         field: "args",

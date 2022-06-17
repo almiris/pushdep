@@ -10,7 +10,7 @@ export class KindRepository extends GenericRepository<Kind> {
     }
 
     async findAsync(transaction: Transaction, kindId: string): Promise<PushDepKind> {
-        return await this.repository.findByPk(kindId, { 
+        return /* await */ this.repository.findByPk(kindId, { 
             transaction: transaction,
             attributes: [ "id", "concurrency" ], 
             raw: true 
@@ -18,7 +18,7 @@ export class KindRepository extends GenericRepository<Kind> {
     }
 
     async findLockAsync(transaction: Transaction, kindId: string, lock: boolean): Promise<PushDepKind> {
-        return await this.repository.findByPk(kindId, { 
+        return /* await */ this.repository.findByPk(kindId, { 
             transaction: transaction,
             lock: lock ? transaction.LOCK.UPDATE : false,
             attributes: [ "id", "concurrency" ], 

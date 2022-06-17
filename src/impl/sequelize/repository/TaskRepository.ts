@@ -15,7 +15,7 @@ export class TaskRepository extends GenericRepository<Task> {
     }
 
     async findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction: Transaction | null, kindId: string, lock = false): Promise<Task> {
-        return await this.repository.findOne({
+        return /* await */ this.repository.findOne({
             transaction: transaction,
             lock: lock ? {
                 level: transaction.LOCK.UPDATE,
@@ -42,7 +42,7 @@ export class TaskRepository extends GenericRepository<Task> {
     }
 
     async countActiveTasks(transaction: Transaction, kindId: string): Promise<number> {
-        return await this.repository.count({
+        return /* await */ this.repository.count({
             transaction: transaction,
             where: {
                 kindId: kindId,
@@ -52,7 +52,7 @@ export class TaskRepository extends GenericRepository<Task> {
     }
 
     async findByTaskIdAsync(transaction: Transaction, taskId: string): Promise<Task> {
-        return await this.repository.findByPk(taskId, {
+        return /* await */ this.repository.findByPk(taskId, {
             transaction: transaction,
         });
     }
@@ -75,9 +75,9 @@ export class TaskRepository extends GenericRepository<Task> {
 
         const count = await this.repository.findAll(options) as unknown as Count[];
 
-        return count.reduce((result: PushDepTaskCount, count: Count) => {
-            result[PushDepExecutionState[count.state]] = Number(count.count);
-            result.all += Number(count.count);
+        return count.reduce((result: PushDepTaskCount, c: Count) => {
+            result[PushDepExecutionState[c.state]] = Number(c.count);
+            result.all += Number(c.count);
             return result;
         }, {
             pending: 0,

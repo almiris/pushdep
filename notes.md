@@ -113,4 +113,5 @@ WHERE
 	pg_stat_activity.datname = '<database>'
 	AND pid <> pg_backend_pid();
 
-npm publish pushdep --access public --dry-run 
+npm publish pushdep --access public --dry-run
+
