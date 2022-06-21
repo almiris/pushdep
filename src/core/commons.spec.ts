@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Sequelize } from "sequelize-typescript";
+import { DataSource } from "typeorm";
 import { InMemoryPushDep } from "../impl/inmemory/InMemoryPushDep";
 import { Kind as SequelizeKind } from "../impl/sequelize/model/Kind.model";
 import { KindActivityLock as SequelizeKindActivityLock } from "../impl/sequelize/model/KindActivityLock.model";
@@ -7,10 +8,10 @@ import { Task as SequelizeTask } from "../impl/sequelize/model/Task.model";
 import { TaskDependency as SequelizeTaskDependency } from "../impl/sequelize/model/TaskDependency.model";
 import { SequelizePushDep } from "../impl/sequelize/SequelizePushDep";
 import { Kind as TypeORMKind } from "../impl/typeorm/entity/Kind.entity";
+import { KindActivityLock as TypeORMKindActivityLock } from "../impl/typeorm/entity/KindActivityLock.entity";
 import { Task as TypeORMTask } from "../impl/typeorm/entity/Task.entity";
-import { TaskExecution as TypeORMTaskExecution } from "../impl/typeorm/entity/TaskExecution.entity";
+import { TaskDependency as TypeORMTaskDependency } from "../impl/typeorm/entity/TaskDependency.entity";
 import { TypeORMPushDep } from "../impl/typeorm/TypeORMPushDep";
-import { DataSource } from "typeorm";
 import { PushDep } from "./PushDep";
 
 let dataSource: DataSource;
@@ -45,8 +46,8 @@ export async function beforeAllAsync(pushDepClass) {
             ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
             extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
             synchronize: true,
-            logging: true,
-            entities: [TypeORMKind, TypeORMTask, TypeORMTaskExecution],
+            logging: false, // true,
+            entities: [TypeORMKind, TypeORMKindActivityLock, TypeORMTask, TypeORMTaskDependency],
             migrations: [],
             subscribers: [],
         });
@@ -85,16 +86,16 @@ export async function afterAllAsync(pushDepClass) {
 
 export async function beforeEachAsync(pushDepClass) {
     if (PUSHDEP_CLASSES[pushDepClass] === TypeORMPushDep) {
-        await dataSource.manager.delete(TypeORMTaskExecution, {});
+        await dataSource.manager.delete(TypeORMKindActivityLock, {});
+        await dataSource.manager.delete(TypeORMTaskDependency, {});
         await dataSource.manager.delete(TypeORMTask, {});
         await dataSource.manager.delete(TypeORMKind, {});
     }
     else if (PUSHDEP_CLASSES[pushDepClass] === SequelizePushDep) {
-        // await SequelizeTaskExecution.truncate({ force: true });
         // await SequelizeTaskDependency.truncate({ force: true });
+        await SequelizeKindActivityLock.truncate({ force: true, cascade: true });
         await SequelizeTask.truncate({ force: true, cascade: true });
         await SequelizeKind.truncate({ force: true, cascade: true });
-        await SequelizeKindActivityLock.truncate({ force: true, cascade: true });
     }
     else if (PUSHDEP_CLASSES[pushDepClass] === InMemoryPushDep) {
         pushDep = new InMemoryPushDep();

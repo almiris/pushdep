@@ -23,7 +23,8 @@ export class KindActivityLock extends Model {
         field: "id",
         type: "int",
         autoIncrement: true,
-        autoIncrementIdentity: true
+        autoIncrementIdentity: true,
+        comment: "Id of the lock"
     })
     id: number;
 
@@ -31,6 +32,7 @@ export class KindActivityLock extends Model {
         field: "locked_at",
         type: "timestamp with time zone",
         allowNull: true,
+        comment: "Last time this lock has been acquired"
     })
     lockedAt: Date;
 
@@ -38,7 +40,8 @@ export class KindActivityLock extends Model {
     @Column({
         field: "kind_id",
         type: "text",
-        allowNull: false
+        allowNull: false,
+        comment: "The lock's kind"
     })
     kindId: string;
     
@@ -49,7 +52,8 @@ export class KindActivityLock extends Model {
     @Column({
         field: "task_id",
         type: "bigint",
-        allowNull: true
+        allowNull: true,
+        comment: "The task that has acquired the lock"
     })
     taskId: string;
     

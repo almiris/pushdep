@@ -95,7 +95,7 @@ export class TaskRepository extends GenericRepository<Task> {
             startedAt: new Date() 
         }, {
             id: taskId
-        }))[0] == 1;
+        }))[0] === 1;
     }
 
     async completeAsync(transaction: Transaction, taskId: string): Promise<boolean> {
@@ -104,7 +104,7 @@ export class TaskRepository extends GenericRepository<Task> {
             completedAt: new Date() 
         }, {
             id: taskId
-        }))[0] == 1;
+        }))[0] === 1;
     }
 
     async cancelAsync(transaction: Transaction, taskId: string): Promise<boolean> {
@@ -113,7 +113,7 @@ export class TaskRepository extends GenericRepository<Task> {
             canceledAt: new Date() 
         }, {
             id: taskId
-        }))[0] == 1;
+        }))[0] === 1;
     }
 
     async failAsync(transaction: Transaction, taskId: string): Promise<boolean> {
@@ -122,7 +122,7 @@ export class TaskRepository extends GenericRepository<Task> {
             failedAt: new Date() 
         }, {
             id: taskId
-        }))[0] == 1;
+        }))[0] === 1;
     }
 
     async returnAsync(transaction: Transaction, taskId: string): Promise<boolean> {
@@ -134,6 +134,6 @@ export class TaskRepository extends GenericRepository<Task> {
             failedAt: null
         }, {
             id: taskId
-        }))[0] == 1;
+        }))[0] === 1;
     }
 }
