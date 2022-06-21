@@ -1,4 +1,4 @@
-import { AutoIncrement, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
+import { Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Task } from "./Task.model";
 
 @Table({
@@ -16,27 +16,21 @@ import { Task } from "./Task.model";
     }]
 })
 export class TaskDependency extends Model {
-    // @PrimaryKey
-    // @AutoIncrement
-    // @Column({
-    //     field: "id"
-    //     // type: "int" // conflicts with @AutoIncrement which set the SERIAL type
-    // })
-    // id: number;
-
+    @PrimaryKey
+    @ForeignKey(() => Task)
     @Column({
         field: "task_id",
         type: "bigint",
         allowNull: false
     })
-    @ForeignKey(() => Task)
     taskId: string;
 
+    @PrimaryKey
+    @ForeignKey(() => Task)
     @Column({
         field: "dependency_id",
         type: "bigint",
         allowNull: false
     })
-    @ForeignKey(() => Task)
     dependencyId: string;
 }

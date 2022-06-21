@@ -1,9 +1,10 @@
 import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Task } from "./Task.entity";
+import { KindActivityLock } from "./KindActivityLock.entity";
 
 @Entity({
-    name: "kind",
+    name: "kind"
 })
 export class Kind implements PushDepKind {
     @PrimaryColumn({
@@ -20,6 +21,14 @@ export class Kind implements PushDepKind {
         comment: "Max concurrency for the kind - Multiple workers will only be able to execute this number of tasks of this kind concurrently"
     })
     concurrency: number;
+
+    @Column({
+        name: "lock_timeout_ms",
+        type: "int",
+        nullable: true,
+        comment: "If concurrency is set, this should be greater than the expected execution time of a task of this kind"
+    })
+    lockTimeoutMs: number;
 
     @CreateDateColumn({
         name: "created_at",
@@ -56,4 +65,7 @@ export class Kind implements PushDepKind {
 
     @OneToMany(() => Task, task => task.kind)
     tasks: Task[];
+
+    @OneToMany(() => KindActivityLock, kindActivityLock => kindActivityLock.kind)
+    kindActivityLocks: KindActivityLock[];
 }
