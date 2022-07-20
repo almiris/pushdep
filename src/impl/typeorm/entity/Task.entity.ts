@@ -2,7 +2,6 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, JoinColumn, 
 import { PushDepTask } from "../../../core/PushDep";
 import { Kind } from "./Kind.entity";
 import { KindActivityLock } from "./KindActivityLock.entity";
-import { TaskDependency } from "./TaskDependency.entity";
 
 @Entity({
     name: "task"
@@ -13,9 +12,9 @@ import { TaskDependency } from "./TaskDependency.entity";
 @Index("idx_task_state", [ "state" ])
 @Index("idx_task_created_at", [ "createdAt" ])
 @Index("idx_task_deleted_at", [ "deletedAt" ])
-// TypeORM does not allow using ASC or DESC in @Index: https://stackoverflow.com/questions/69850518/typeorm-index-creation
+// TypeORM does not allow using ASC or DESC in @Index: https://stackoverflow.com/questions/69850518/typeorm-index-creation => @see migration/MigrateTaskIndexes
 // @Index("idx_task_state_priority_created_at", [ "state ASC", "priority DESC", "created_at ASC" ])
-@Index("idx_task_state_priority_created_at", [ "state", "priority", "createdAt" ])
+// @Index("idx_task_state_priority_created_at", [ "state", "priority", "createdAt" ])
 export class Task implements PushDepTask {
     @PrimaryGeneratedColumn('identity', {
         generatedIdentity: 'BY DEFAULT',

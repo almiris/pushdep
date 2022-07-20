@@ -28,11 +28,16 @@ export class TaskRepository extends GenericRepository<Task> {
                     .select("COUNT(td.task_id)")
                     .from("task_dependency", "td")
                     .innerJoin("task", "t", "td.dependency_id = t.id and td.task_id = task.id and (t.state = :pendingState or t.state = :activeState)", { pendingState: PushDepExecutionState.pending, activeState: PushDepExecutionState.active })
+                    // The line above can be replaced by the following three lines:
+                    // .innerJoin("task", "t", "td.dependency_id = t.id")
+                    // .where("td.task_id = task.id")
+                    // .andWhere("(t.state = :pendingState or t.state = :activeState)", { pendingState: PushDepExecutionState.pending, activeState: PushDepExecutionState.active })
                     .getQuery()}=0`;
             })
             .orderBy("task.state", "ASC")
             .orderBy("task.priority", "DESC")
             .addOrderBy("task.createdAt", "ASC")
+            .take(1)
             .getOne();
     }
 

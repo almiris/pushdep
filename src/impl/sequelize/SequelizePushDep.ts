@@ -110,6 +110,7 @@ class SequelizeTaskService {
         });
     }
 
+    // TODO use transaction like in complete !??
     async cancelAsync(task: PushDepTask): Promise<void> {
         await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.canceled);
         await this.taskRepository.cancelAsync(null, task.id)
