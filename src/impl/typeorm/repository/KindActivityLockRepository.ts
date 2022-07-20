@@ -15,6 +15,7 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
                 lockedAt: IsNull()
             })
             .orWhere("EXTRACT(EPOCH FROM (NOW() - kind_activity_lock.locked_at)) > kind.lock_timeout_ms / 1000")
+            .take(1)
             .getOne();
     }
 

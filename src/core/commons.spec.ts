@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Sequelize } from "sequelize-typescript";
+import { MigrateTaskIndexes1658264833157 } from "src/impl/typeorm/migration/MigrateTaskIndexes";
 import { DataSource } from "typeorm";
 import { InMemoryPushDep } from "../impl/inmemory/InMemoryPushDep";
 import { Kind as SequelizeKind } from "../impl/sequelize/model/Kind.model";
@@ -48,11 +49,15 @@ export async function beforeAllAsync(pushDepClass) {
             synchronize: true,
             logging: false, // true,
             entities: [TypeORMKind, TypeORMKindActivityLock, TypeORMTask, TypeORMTaskDependency],
-            migrations: [],
+            migrationsTableName: "pshdp_typeorm_migrations",
+            // migrationsRun: true, => QueryFailedError: relation "public.task" does not exist
+            // migrations: [ MigrateTaskIndexes1658264833157 ],
             subscribers: [],
         });
         await dataSource.initialize();
         pushDep = new TypeORMPushDep(dataSource);
+        const migration = new MigrateTaskIndexes1658264833157();
+        await migration.up(dataSource.createQueryRunner());
     }
     else if (PUSHDEP_CLASSES[pushDepClass] === SequelizePushDep) {
         sequelize = new Sequelize({
