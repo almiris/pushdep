@@ -92,34 +92,38 @@ export class TaskRepository extends GenericRepository<Task> {
         })).affected === 1;
     }
 
-    async completeAsync(taskId: string): Promise<boolean> {
+    async completeAsync(taskId: string, taskResults: any): Promise<boolean> {
         return (await this.repository.update({ id: taskId }, { 
             state: PushDepExecutionState.completed, 
-            completedAt: new Date() 
+            completedAt: new Date(),
+            results: taskResults
         })).affected === 1;
     }
 
-    async cancelAsync(taskId: string): Promise<boolean> {
+    async cancelAsync(taskId: string, taskResults: any): Promise<boolean> {
         return (await this.repository.update({ id: taskId }, { 
             state: PushDepExecutionState.canceled, 
-            canceledAt: new Date() 
+            canceledAt: new Date(),
+            results: taskResults
         })).affected === 1;
     }
 
-    async failAsync(taskId: string): Promise<boolean> {
+    async failAsync(taskId: string, taskResults: any): Promise<boolean> {
         return (await this.repository.update({ id: taskId }, { 
             state: PushDepExecutionState.failed, 
-            failedAt: new Date() 
+            failedAt: new Date(),
+            results: taskResults
         })).affected === 1;
     }
 
-    async returnAsync(taskId: string): Promise<boolean> {
+    async returnAsync(taskId: string, taskResults: any): Promise<boolean> {
         return (await this.repository.update({ id: taskId }, { 
             state: PushDepExecutionState.pending, 
             startedAt: null,
             completedAt: null,
             canceledAt: null,
-            failedAt: null
+            failedAt: null,
+            results: taskResults
         })).affected === 1;
     }    
 }

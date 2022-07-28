@@ -108,23 +108,38 @@ class TypeORMTaskService {
             const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
             await kindActivityLockRepository.releaseLockAsync(task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.completed);
-            await taskRepository.completeAsync(task.id)
+            await taskRepository.completeAsync(task.id, task.results);
         });
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.canceled);
-        await this.taskRepository.cancelAsync(task.id)
+        await this.dataSource.transaction<void>("READ COMMITTED", async (transactionalEntityManager: EntityManager): Promise<void> => {
+            const kindActivityLockRepository = new KindActivityLockRepository(transactionalEntityManager.getRepository(KindActivityLock));
+            const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
+            await kindActivityLockRepository.releaseLockAsync(task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.canceled);
+            await taskRepository.cancelAsync(task.id, task.results);
+        });
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.failed);
-        await this.taskRepository.failAsync(task.id)
+        await this.dataSource.transaction<void>("READ COMMITTED", async (transactionalEntityManager: EntityManager): Promise<void> => {
+            const kindActivityLockRepository = new KindActivityLockRepository(transactionalEntityManager.getRepository(KindActivityLock));
+            const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
+            await kindActivityLockRepository.releaseLockAsync(task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.failed);
+            await taskRepository.failAsync(task.id, task.results);
+        });
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.pending);
-        await this.taskRepository.returnAsync(task.id)
+        await this.dataSource.transaction<void>("READ COMMITTED", async (transactionalEntityManager: EntityManager): Promise<void> => {
+            const kindActivityLockRepository = new KindActivityLockRepository(transactionalEntityManager.getRepository(KindActivityLock));
+            const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
+            await kindActivityLockRepository.releaseLockAsync(task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.pending);
+            await taskRepository.returnAsync(task.id, task.results);
+        });
     }
 
     async allowTaskExecutionStateTransition(task: PushDepTask, state: PushDepExecutionState): Promise<void> {

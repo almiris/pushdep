@@ -98,40 +98,44 @@ export class TaskRepository extends GenericRepository<Task> {
         }))[0] === 1;
     }
 
-    async completeAsync(transaction: Transaction, taskId: string): Promise<boolean> {
+    async completeAsync(transaction: Transaction, taskId: string, taskResults: any): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.completed, 
-            completedAt: new Date() 
+            completedAt: new Date(),
+            results: taskResults
         }, {
             id: taskId
         }))[0] === 1;
     }
 
-    async cancelAsync(transaction: Transaction, taskId: string): Promise<boolean> {
+    async cancelAsync(transaction: Transaction, taskId: string, taskResults: any): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.canceled, 
-            canceledAt: new Date() 
+            canceledAt: new Date(),
+            results: taskResults
         }, {
             id: taskId
         }))[0] === 1;
     }
 
-    async failAsync(transaction: Transaction, taskId: string): Promise<boolean> {
+    async failAsync(transaction: Transaction, taskId: string, taskResults: any): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.failed, 
-            failedAt: new Date() 
+            failedAt: new Date(),
+            results: taskResults
         }, {
             id: taskId
         }))[0] === 1;
     }
 
-    async returnAsync(transaction: Transaction, taskId: string): Promise<boolean> {
+    async returnAsync(transaction: Transaction, taskId: string, taskResults: any): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.pending, 
             startedAt: null,
             completedAt: null,
             canceledAt: null,
-            failedAt: null
+            failedAt: null,
+            results: taskResults
         }, {
             id: taskId
         }))[0] === 1;
