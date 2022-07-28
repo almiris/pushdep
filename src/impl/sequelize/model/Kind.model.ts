@@ -17,7 +17,7 @@ export class Kind extends Model implements PushDepKind {
     @Column({
         field: "id",
         type: "text",
-        comment: "Id of this kind"
+        comment: "Id of the kind"
     })
     id: string;
 
@@ -42,6 +42,7 @@ export class Kind extends Model implements PushDepKind {
         field: "created_at",
         type: "timestamp with time zone",
         allowNull: false,
+        comment: "Timestamp that tracks when the kind is first set"
     })
     createdAt: Date;
 
@@ -50,6 +51,7 @@ export class Kind extends Model implements PushDepKind {
         field: "updated_at",
         type: "timestamp with time zone",
         allowNull: false,
+        comment: "Timestamp that tracks when the kind is updated"
     })
     updatedAt: Date;
 
@@ -57,7 +59,8 @@ export class Kind extends Model implements PushDepKind {
     @Column({
         field: "deleted_at",
         type: "timestamp with time zone",
-        allowNull: true
+        allowNull: true,
+        comment: "Timestamp that tracks when the kind is deleted"
     })
     deletedAt: Date;
 
@@ -65,7 +68,8 @@ export class Kind extends Model implements PushDepKind {
         field: "version",
         type: "int",
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0,
+        comment: "Version of the kind - used for optimistic locking"
     })
     version: number;
 

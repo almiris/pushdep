@@ -11,12 +11,12 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
     }
 
     async acquireLockAsync(transaction: Transaction, kindId: string): Promise<KindActivityLock> {
-        const lock = await this.repository.findOne({
+        return /* await */ this.repository.findOne({
             transaction: transaction,
-            lock: transaction.LOCK.UPDATE/*{
+            lock: {
                 level: transaction.LOCK.UPDATE,
                 of: KindActivityLock
-            }*/,
+            },
             skipLocked: true,
             where: {
                 [Op.and]: [{
@@ -35,7 +35,6 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
                 required: true
             }
         });
-        return lock;
     }
 
     async reserveLockAsync(transaction: Transaction, lockId: number, taskId: string): Promise<number> {
@@ -60,12 +59,8 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
             skipLocked: true,
             where: {
                 kindId: kindId,
-                taskId: taskId,
-                // lockedAt: {
-                //     [Op.not]: null
-                // }
-            },
-            // order: [["lockedAt", "ASC"]]
+                taskId: taskId
+            }
         });
         if (lock) {
             await this.repository.update({ 
@@ -81,6 +76,6 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
     }
 
     async deleteAllAsync(transaction: Transaction, kindId: string): Promise<number> {
-        return await this.deleteAsync(transaction, { kindId: kindId });
+        return /* await */ this.deleteAsync(transaction, { kindId: kindId });
     }
 }

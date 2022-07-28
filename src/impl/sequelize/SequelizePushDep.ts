@@ -1,25 +1,21 @@
-import { readlinkSync } from "fs";
 import "reflect-metadata";
 import { Transaction } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
-import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecutionBuilder } from "../../core/PushDep";
+import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount } from "../../core/PushDep";
 import { Kind } from "./model/Kind.model";
 import { KindActivityLock } from "./model/KindActivityLock.model";
 import { Task } from "./model/Task.model";
 import { TaskDependency } from "./model/TaskDependency.model";
-import { TaskExecution } from "./model/TaskExecution.model";
 import { KindActivityLockRepository } from "./repository/KindActivityLockRepository";
 import { KindRepository } from "./repository/KindRepository";
 import { TaskDependencyRepository } from "./repository/TaskDependencyRepository";
-import { TaskExecutionRepository } from "./repository/TaskExecutionRepository";
 import { TaskRepository } from "./repository/TaskRepository";
 
-class SequelizeTaskExecutionService {
+class SequelizeTaskService {
     kindRepository: KindRepository;
     kindActivityLockRepository: KindActivityLockRepository;
     taskRepository: TaskRepository;
     taskDependencyRepository: TaskDependencyRepository;
-    taskExecutionRepository:TaskExecutionRepository;
 
     constructor(private sequelize: Sequelize) {
         // sequelize.repositoryMode = true;
@@ -27,7 +23,6 @@ class SequelizeTaskExecutionService {
         this.kindActivityLockRepository = new KindActivityLockRepository(sequelize.getRepository(KindActivityLock));
         this.taskRepository = new TaskRepository(sequelize.getRepository(Task));
         this.taskDependencyRepository = new TaskDependencyRepository(sequelize.getRepository(TaskDependency));
-        this.taskExecutionRepository = new TaskExecutionRepository(sequelize.getRepository(TaskExecution));
     }
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
@@ -41,33 +36,32 @@ class SequelizeTaskExecutionService {
     }
 
     async getKindAsync(kindId: string): Promise<PushDepKind> {
-        return await this.kindRepository.findAsync(null, kindId);
+        return /* await */ this.kindRepository.findAsync(null, kindId);
     }
     
     async pushAsync(task: PushDepTask): Promise<PushDepTask> {
-        return await this.sequelize.transaction<Task>(async (transaction: Transaction): Promise<Task> => {
-            return await this.doPushAsync(transaction, task);
+        return /* await */ this.sequelize.transaction<Task>(async (transaction: Transaction): Promise<Task> => {
+            return /* await */ this.doPushAsync(transaction, task);
         });
     }
 
     async doPushAsync(transaction: Transaction, task: PushDepTask): Promise<Task> {
-        if (!task.id) {
-            task.dependencies = await this.doPushDependenciesAsync(transaction, task.dependencies);
-            task.priority = task.priority || 1;
-            const taskModel = await this.taskRepository.createAsync(transaction, task as Task);
-            if (task.dependencies) {
-                await this.taskDependencyRepository.bulkCreateAsync(transaction, task.dependencies.map(dependency => ({
+        const taskEntity = task as Task;
+        if (!taskEntity.id) {
+            taskEntity.dependencies = await this.doPushDependenciesAsync(transaction, taskEntity.dependencies);
+            taskEntity.priority = taskEntity.priority || 1;
+            taskEntity.state = PushDepExecutionState.pending;
+            taskEntity.createdAt = new Date();
+            const taskModel = await this.taskRepository.createAsync(transaction, taskEntity);
+            if (taskEntity.dependencies) {
+                await this.taskDependencyRepository.bulkCreateAsync(transaction, taskEntity.dependencies.map(dependency => ({
                     taskId: taskModel.id,
                     dependencyId: dependency.id
                 })) as TaskDependency[]);
             }
-            const taskExecution = PushDepTaskExecutionBuilder.build(task);
-            delete taskExecution.task;
-            (taskExecution as any).taskId = taskModel.id;
-            await this.taskExecutionRepository.createAsync(transaction, taskExecution as TaskExecution);
-            (task as any).id = taskModel.id;
+            taskEntity.id = taskModel.id;
         }
-        return task as Task;
+        return taskEntity;
     }
 
     async doPushDependenciesAsync(transaction: Transaction, dependencies?: PushDepTask[]): Promise<Task[]> {
@@ -83,15 +77,15 @@ class SequelizeTaskExecutionService {
     }
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
-        return await this.taskExecutionRepository.countAsync(kindId); 
+        return /* await */ this.taskRepository.countAsync(kindId); 
     }
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
-        return await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(null, kindId);
+        return /* await */ this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(null, kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        const task = await this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
+        return /* await */ this.sequelize.transaction<Task>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<Task> => {
             let task = null;
             const lock = await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
             if (lock) {
@@ -101,92 +95,100 @@ class SequelizeTaskExecutionService {
                 console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await this.kindActivityLockRepository.reserveLockAsync(transaction, lock.id, task.id);
-                    await this.taskExecutionRepository.startAsync(transaction, task.id);
+                    await this.taskRepository.startAsync(transaction, task.id);
                 }
             }
             return task;
         });
-        return task;
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
-            const lock = await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
+            await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.completed);
-            await this.taskExecutionRepository.completeAsync(transaction, task.id)
+            await this.taskRepository.completeAsync(transaction, task.id)
         });
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.canceled);
-        await this.taskExecutionRepository.cancelAsync(null, task.id)
+        await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
+            await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.canceled);
+            await this.taskRepository.cancelAsync(transaction, task.id)
+        });
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.failed);
-        await this.taskExecutionRepository.failAsync(null, task.id)
+        await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
+            await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.failed);
+            await this.taskRepository.failAsync(transaction, task.id)
+        });
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        await this.allowTaskExecutionStateTransition(null, task, PushDepExecutionState.pending);
-        await this.taskExecutionRepository.returnAsync(null, task.id)
+        await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
+            await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
+            await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.pending);
+            await this.taskRepository.returnAsync(transaction, task.id)
+        });
     }
 
     async allowTaskExecutionStateTransition(transaction: Transaction, task: PushDepTask, state: PushDepExecutionState): Promise<void> {
-        const taskExecution = await this.taskExecutionRepository.findByTaskIdAsync(transaction, task.id);
-        if (!taskExecution) {
+        const taskEntity = await this.taskRepository.findByTaskIdAsync(transaction, task.id);
+        if (!taskEntity) {
             throw new Error(`Illegal state for task ${task.id}`);
         }
-        if (!AllowedStateTransitions[taskExecution.state]?.includes(state)) {
-            throw new Error(`Illegal state transition: ${PushDepExecutionState[taskExecution.state]} -> ${PushDepExecutionState[state]}`);
+        if (!AllowedStateTransitions[taskEntity.state]?.includes(state)) {
+            throw new Error(`Illegal state transition: ${PushDepExecutionState[taskEntity.state]} -> ${PushDepExecutionState[state]}`);
         }
     }
 }
 
 export class SequelizePushDep implements PushDep {
-    taskExecutionService: SequelizeTaskExecutionService;
+    taskService: SequelizeTaskService;
 
     constructor(private sequelize: Sequelize) {
-        this.taskExecutionService = new SequelizeTaskExecutionService(sequelize);
+        this.taskService = new SequelizeTaskService(sequelize);
     }
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        await this.taskExecutionService.setKindAsync(kind);
+        await this.taskService.setKindAsync(kind);
     }
 
     async getKindAsync(kindId: string): Promise<PushDepKind> {
-        return await this.taskExecutionService.getKindAsync(kindId);
+        return /* await */ this.taskService.getKindAsync(kindId);
     }
 
     async pushAsync(task: PushDepTask): Promise<PushDepTask> {
-        return await this.taskExecutionService.pushAsync(task);
+        return /* await */ this.taskService.pushAsync(task);
     }
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
-        return await this.taskExecutionService.countAsync(kindId);
+        return /* await */ this.taskService.countAsync(kindId);
     }
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
-        return await this.taskExecutionService.peekAsync(kindId);
+        return /* await */ this.taskService.peekAsync(kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
-        return await this.taskExecutionService.startAsync(kindId);
+        return /* await */ this.taskService.startAsync(kindId);
     }
 
     async completeAsync(task: PushDepTask): Promise<void> {
-        await this.taskExecutionService.completeAsync(task);
+        await this.taskService.completeAsync(task);
     }
 
     async cancelAsync(task: PushDepTask): Promise<void> {
-        await this.taskExecutionService.cancelAsync(task);
+        await this.taskService.cancelAsync(task);
     }
 
     async failAsync(task: PushDepTask): Promise<void> {
-        await this.taskExecutionService.failAsync(task);
+        await this.taskService.failAsync(task);
     }
 
     async returnAsync(task: PushDepTask): Promise<void> {
-        await this.taskExecutionService.returnAsync(task);
+        await this.taskService.returnAsync(task);
     }
 }

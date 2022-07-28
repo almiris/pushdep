@@ -8,11 +8,12 @@ export interface PushDepKind {
 export interface PushDepTask {
     readonly id?: string;
     kindId: string;
-    dependencies?: PushDepTask[];
-    args?: any;
     priority?: number;
+    tag?: string;
+    args?: any;
     results?: any;
     // retry?: number; // TODO
+    dependencies?: PushDepTask[];
 }
 
 export const PushDepTaskProperties: PushDepTask = {
@@ -47,23 +48,12 @@ export interface PushDepTaskCount {
 }
 
 export interface PushDepTaskExecution {
-    task: PushDepTask;
     state?: PushDepExecutionState;
     createdAt?: Date;
     startedAt?: Date;
     completedAt?: Date;
     canceledAt?: Date;
     failedAt?: Date;
-}
-
-export class PushDepTaskExecutionBuilder {
-    static build(task: PushDepTask): PushDepTaskExecution {
-        return {
-            task: task,
-            state: PushDepExecutionState.pending,
-            createdAt: new Date()
-        }
-    }
 }
 
 export interface PushDep {
