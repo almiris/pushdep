@@ -1,3 +1,6 @@
+// npx jest --testPathPattern PushDep.spec --pushDepClass=InMemoryPushDep
+// npx jest --testPathPattern PushDep.spec --pushDepClass=TypeORMPushDep
+// npx jest --testPathPattern PushDep.spec --pushDepClass=SequelizePushDep
 import "dotenv/config";
 import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEPS } from "./commons.spec";
 

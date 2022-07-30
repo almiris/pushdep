@@ -1,3 +1,6 @@
+// npx jest --testPathPattern benchmark.spec --pushDepClass=InMemoryPushDep
+// npx jest --testPathPattern benchmark.spec --pushDepClass=TypeORMPushDep
+// npx jest --testPathPattern benchmark.spec --pushDepClass=SequelizePushDep
 import "dotenv/config";
 import { promisify } from "util";
 import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEPS } from "./commons.spec";
@@ -52,17 +55,17 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
             await Promise.all(promises);
         }
 
-        const workerOptionsA = {
+        const workerOptionsA: PushDepWorkerOptions = {
             kindId: kindIdA,
             idleTimeoutMs: 100
         }; 
 
-        const workerOptionsB = {
+        const workerOptionsB: PushDepWorkerOptions = {
             kindId: kindIdB,
             idleTimeoutMs: 100
         }; 
 
-        const workerOptionsC = {
+        const workerOptionsC: PushDepWorkerOptions = {
             kindId: kindIdC,
             idleTimeoutMs: 100
         }; 

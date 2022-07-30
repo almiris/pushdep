@@ -106,7 +106,7 @@ class SequelizeTaskService {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.completed);
-            await this.taskRepository.completeAsync(transaction, task.id)
+            await this.taskRepository.completeAsync(transaction, task.id, task.results);
         });
     }
 
@@ -114,7 +114,7 @@ class SequelizeTaskService {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.canceled);
-            await this.taskRepository.cancelAsync(transaction, task.id)
+            await this.taskRepository.cancelAsync(transaction, task.id, task.results);
         });
     }
 
@@ -122,7 +122,7 @@ class SequelizeTaskService {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.failed);
-            await this.taskRepository.failAsync(transaction, task.id)
+            await this.taskRepository.failAsync(transaction, task.id, task.results);
         });
     }
 
@@ -130,7 +130,7 @@ class SequelizeTaskService {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.pending);
-            await this.taskRepository.returnAsync(transaction, task.id)
+            await this.taskRepository.returnAsync(transaction, task.id, task.results);
         });
     }
 

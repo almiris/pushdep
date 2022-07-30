@@ -1,3 +1,6 @@
+// npx jest --testPathPattern Worker.spec --pushDepClass=InMemoryPushDep
+// npx jest --testPathPattern Worker.spec --pushDepClass=TypeORMPushDep
+// npx jest --testPathPattern Worker.spec --pushDepClass=SequelizePushDep
 import "dotenv/config";
 import { promisify } from "util";
 import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEPS } from "./commons.spec";
