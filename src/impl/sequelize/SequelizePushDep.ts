@@ -143,6 +143,10 @@ class SequelizeTaskService {
             throw new Error(`Illegal state transition: ${PushDepExecutionState[taskEntity.state]} -> ${PushDepExecutionState[state]}`);
         }
     }
+
+    async getTaskDependenciesAsync(task: PushDepTask): Promise<PushDepTask[] | null> {
+        return task.id ? /* await */ this.taskRepository.getTaskDependenciesAsync(null, task.id) : null;
+    }
 }
 
 export class SequelizePushDep implements PushDep {
@@ -190,5 +194,9 @@ export class SequelizePushDep implements PushDep {
 
     async returnAsync(task: PushDepTask): Promise<void> {
         await this.taskService.returnAsync(task);
+    }
+
+    async getTaskDependenciesAsync(task: PushDepTask): Promise<PushDepTask[] | null> {
+        return /* await */ this.taskService.getTaskDependenciesAsync(task);
     }
 }

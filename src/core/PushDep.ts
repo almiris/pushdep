@@ -10,8 +10,8 @@ export interface PushDepTask {
     kindId: string;
     priority?: number;
     tag?: string;
-    args?: any;
-    results?: any;
+    args?: any; // Must be an object, do not use simple string!
+    results?: any; // Must be an object, do not use simple string!
     // retry?: number; // TODO
     dependencies?: PushDepTask[];
 }
@@ -67,4 +67,5 @@ export interface PushDep {
     cancelAsync(task: PushDepTask): Promise<void>;
     failAsync(task: PushDepTask): Promise<void>;
     returnAsync(task: PushDepTask): Promise<void>;
+    getTaskDependenciesAsync(task: PushDepTask): Promise<PushDepTask[] | null>
 }

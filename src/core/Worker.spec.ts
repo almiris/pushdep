@@ -65,6 +65,67 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         expect.assertions(1);
     }, 30000);
 
+    it('It should work even if dependencies fail ;-)', async () => {
+        let numberOfTasks = 5;
+        const task = {
+            kindId: "a" , 
+            args: { executionStatus: "fail" }, // don't use simple strings! args: "complete" works with typeORM but Sequelize needs '"complete"'!
+            dependencies: [{
+                kindId: "a", 
+                args: { executionStatus: "complete" }, 
+                dependencies: [{
+                    kindId: "a", 
+                    args: { executionStatus: "fail" }
+                }, {
+                    kindId: "a", 
+                    args: { executionStatus: "cancel" },
+                    dependencies: [{
+                        kindId: "a", 
+                        args: { executionStatus: "complete" }
+                    }]
+                }]
+            }]
+        };
+        const consoleWorkerFunction = async (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => {
+            console.log(`worker ${worker.id} treating task ${task.id}`);
+            await sleep(10);
+            task.results = { result: "Execution status: " + task.args.executionStatus };
+            switch (task.args.executionStatus) {
+                case "complete": await pushDep.completeAsync(task); break;
+                case "fail": await pushDep.failAsync(task); break;
+                case "cancel": await pushDep.cancelAsync(task); break;
+            }
+            numberOfTasks--;
+        };
+
+        const workerOptionsA = new PushDepWorkerOptions();
+        workerOptionsA.kindId = "a";
+
+        const workerA = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerFunction);
+        workerA.startAsync();
+
+        await pushDep.pushAsync(task);
+
+        while (numberOfTasks) {
+            await sleep(10);
+        }
+
+        const count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 0,
+            completed: 2,
+            canceled: 1,
+            failed: 2,
+            all: 5
+        });
+
+        await workerA.stopAsync();
+        await workerA.waitForTerminationAsync();
+
+        expect.assertions(1);
+    }, 30000);
+
     it('It should execute a hierarchical job using multiple workers', async () => {
         const start = new Date().getTime();
 

@@ -126,4 +126,19 @@ export class TaskRepository extends GenericRepository<Task> {
             results: taskResults
         })).affected === 1;
     }    
+
+    async getTaskDependenciesAsync(taskId: string) : Promise<Task[] | null> {
+        const task = await this.repository.findOne({
+            where: {
+                id: taskId
+            },
+            relations: {
+                dependencies: true
+            },
+            order: {
+                id: "ASC"
+            }
+        });
+        return task && task.dependencies && task.dependencies.length > 0 ? task.dependencies : null;
+    }
 }

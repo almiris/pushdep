@@ -202,6 +202,15 @@ class InMemoryTaskService {
         }
         return t;
     }
+
+    getTaskDependencies(task: PushDepTask): PushDepTask[] | null {
+        let dependencies = null;
+        if (task.id) {
+            const t = this.allTasks[task.id];
+            dependencies = t ? t.dependencies : null;
+        }
+        return dependencies;
+    }
 }
 
 export class InMemoryPushDep implements PushDep {
@@ -245,5 +254,9 @@ export class InMemoryPushDep implements PushDep {
 
     async returnAsync(task: PushDepTask): Promise<void> {
         this.taskService.return(task);
+    }
+
+    async getTaskDependenciesAsync(task: PushDepTask): Promise<PushDepTask[] | null> {
+        return this.taskService.getTaskDependencies(task);
     }
 }

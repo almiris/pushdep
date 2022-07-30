@@ -3,6 +3,7 @@ import { FindOptions, Op, Transaction } from "sequelize";
 import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
 import { GenericRepository } from "../helper/GenericRepository";
 import { Task } from "../model/Task.model";
+import { TaskDependency } from "../model/TaskDependency.model";
 
 interface Count { 
     state: number; 
@@ -139,5 +140,22 @@ export class TaskRepository extends GenericRepository<Task> {
         }, {
             id: taskId
         }))[0] === 1;
+    }
+
+    async getTaskDependenciesAsync(transaction: Transaction | null, taskId: string): Promise<Task[] | null> {
+        const task = await this.repository.findOne({
+            transaction: transaction,
+            where: {
+                id: taskId
+            },
+            include: {
+                model: Task,
+                as: "dependencies"
+            },
+            order: [
+                ["id", "ASC"]
+            ]
+        });
+        return task && task.dependencies && task.dependencies.length > 0 ? task.dependencies : null;
     }
 }

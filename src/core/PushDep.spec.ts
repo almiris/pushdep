@@ -299,6 +299,30 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         expect.assertions(2);
     });
 
+    it('It should get task dependencies', async () => {
+        const task0 = await pushDep.pushAsync({
+            kindId: "a", dependencies: null
+        });
+
+        const task1 = await pushDep.pushAsync({
+            kindId: "a", dependencies: [{
+                kindId: "a",
+                args: { task1Dep1: true }
+            }, {
+                kindId: "a",
+                args: { task1Dep2: true }
+            }]
+        });
+        
+        expect(await pushDep.getTaskDependenciesAsync(task0)).toBe(null);
+        const task1Dependencies = await pushDep.getTaskDependenciesAsync(task1);
+        expect(task1Dependencies.length).toBe(2);
+        expect(task1Dependencies[0].args.task1Dep1 || task1Dependencies[0].args.task1Dep2).toBe(true);
+        expect(task1Dependencies[1].args.task1Dep1 || task1Dependencies[1].args.task1Dep2).toBe(true);
+
+        expect.assertions(4);
+    });
+
     it('It should test kind concurrency', async () => {
         await pushDep.setKindAsync({ id: "a", concurrency: 3 });
 
