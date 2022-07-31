@@ -109,7 +109,11 @@ WHERE
 	pg_stat_activity.datname = '<database>'
 	AND pid <> pg_backend_pid();
 
-npm publish pushdep --access public --dry-run
+npm run build
+npm run package
+cd package
+npm publish almiris-pushdep-<version>.tgz
+git tag -a v<version> -m "version <version>"
 
 npx jest --runInBand --coverage
 
