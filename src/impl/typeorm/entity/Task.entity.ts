@@ -1,10 +1,11 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { PushDepTask } from "../../../core/PushDep";
+import { PSHDP_TASK_DEPENDENCY_TABLE, PSHDP_TASK_TABLE } from "../definitions";
 import { Kind } from "./Kind.entity";
 import { KindActivityLock } from "./KindActivityLock.entity";
 
 @Entity({
-    name: "task"
+    name: PSHDP_TASK_TABLE
 })
 @Index("idx_task_priority", [ "priority" ])
 @Index("idx_task_tag", [ "tag" ])
@@ -60,7 +61,7 @@ export class Task implements PushDepTask {
         name: "state",
         type: "int",
         nullable: false,
-        comment: "State of this execution"
+        comment: "State of the execution"
     })
     state: number;
 
@@ -167,7 +168,7 @@ export class Task implements PushDepTask {
 
     @ManyToMany(() => Task, task => task.dependents, { nullable: true })
     @JoinTable({
-        name: "task_dependency",
+        name: PSHDP_TASK_DEPENDENCY_TABLE,
         joinColumn: {
             name: "task_id",
             referencedColumnName: "id"

@@ -1,9 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { PSHDP_KIND_ACTIVITY_LOCK_TABLE } from "../definitions";
 import { Kind } from "./Kind.entity";
 import { Task } from "./Task.entity";
 
 @Entity({
-    name: "kind_activity_lock",
+    name: PSHDP_KIND_ACTIVITY_LOCK_TABLE,
 })
 @Index("idx_kind_activity_lock_kind_id", [ "kindId" ])
 export class KindActivityLock {

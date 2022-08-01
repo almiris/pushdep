@@ -1,4 +1,5 @@
 import { IsNull, Repository } from "typeorm";
+import { PSHDP_KIND_ACTIVITY_LOCK_TABLE, PSHDP_KIND_TABLE } from "../definitions";
 import { KindActivityLock } from "../entity/KindActivityLock.entity";
 import { GenericRepository } from "../helper/GenericRepository";
 
@@ -8,13 +9,13 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
     }
 
     async acquireLockAsync(kindId: string): Promise<KindActivityLock> {
-        return /* await */ this.repository.createQueryBuilder("kind_activity_lock")
-            .setLock("pessimistic_partial_write", undefined, [ "kind_activity_lock" ])
-            .innerJoin("kind_activity_lock.kind", "kind", "kind_activity_lock.kindId = :kindId", { kindId: kindId })
+        return /* await */ this.repository.createQueryBuilder(PSHDP_KIND_ACTIVITY_LOCK_TABLE)
+            .setLock("pessimistic_partial_write", undefined, [ PSHDP_KIND_ACTIVITY_LOCK_TABLE ])
+            .innerJoin(`${PSHDP_KIND_ACTIVITY_LOCK_TABLE}.kind`, PSHDP_KIND_TABLE, `${PSHDP_KIND_ACTIVITY_LOCK_TABLE}.kindId = :kindId`, { kindId: kindId })
             .where({
                 lockedAt: IsNull()
             })
-            .orWhere("EXTRACT(EPOCH FROM (NOW() - kind_activity_lock.locked_at)) > kind.lock_timeout_ms / 1000")
+            .orWhere(`EXTRACT(EPOCH FROM (NOW() - ${PSHDP_KIND_ACTIVITY_LOCK_TABLE}.locked_at)) > ${PSHDP_KIND_TABLE}.lock_timeout_ms / 1000`)
             .take(1)
             .getOne();
     }
@@ -30,7 +31,7 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
         const lock = await this.repository.findOne({
             lock: {
                 mode: "pessimistic_partial_write",
-                tables: [ "kind_activity_lock" ]
+                tables: [ PSHDP_KIND_ACTIVITY_LOCK_TABLE ]
             },
             where: {
                 kindId: kindId,

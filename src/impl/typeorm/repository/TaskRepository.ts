@@ -1,5 +1,6 @@
 import { Repository } from "typeorm";
 import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
+import { PSHDP_TASK_DEPENDENCY_TABLE, PSHDP_TASK_TABLE } from "../definitions";
 import { Task } from "../entity/Task.entity";
 import { GenericRepository } from "../helper/GenericRepository";
 
@@ -14,9 +15,9 @@ export class TaskRepository extends GenericRepository<Task> {
     }
 
     async findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(kindId: string, lock = false): Promise<Task> {
-        const queryBuilder = this.repository.createQueryBuilder("task");
+        const queryBuilder = this.repository.createQueryBuilder(PSHDP_TASK_TABLE);
         if (lock) {
-            queryBuilder.setLock("pessimistic_partial_write", undefined, [ "task" ])
+            queryBuilder.setLock("pessimistic_partial_write", undefined, [ PSHDP_TASK_TABLE ])
         }
         return /* await */ queryBuilder.where({ 
                 kindId: kindId, 
@@ -26,17 +27,17 @@ export class TaskRepository extends GenericRepository<Task> {
                 return `${qb
                     .subQuery()
                     .select("COUNT(td.task_id)")
-                    .from("task_dependency", "td")
-                    .innerJoin("task", "t", "td.dependency_id = t.id and td.task_id = task.id and (t.state = :pendingState or t.state = :activeState)", { pendingState: PushDepExecutionState.pending, activeState: PushDepExecutionState.active })
+                    .from(PSHDP_TASK_DEPENDENCY_TABLE, "td")
+                    .innerJoin(PSHDP_TASK_TABLE, "t", `td.dependency_id = t.id and td.task_id = ${PSHDP_TASK_TABLE}.id and (t.state = :pendingState or t.state = :activeState)`, { pendingState: PushDepExecutionState.pending, activeState: PushDepExecutionState.active })
                     // The line above can be replaced by the following three lines:
                     // .innerJoin("task", "t", "td.dependency_id = t.id")
                     // .where("td.task_id = task.id")
                     // .andWhere("(t.state = :pendingState or t.state = :activeState)", { pendingState: PushDepExecutionState.pending, activeState: PushDepExecutionState.active })
                     .getQuery()}=0`;
             })
-            .orderBy("task.state", "ASC")
-            .orderBy("task.priority", "DESC")
-            .addOrderBy("task.createdAt", "ASC")
+            .orderBy(`${PSHDP_TASK_TABLE}.state`, "ASC")
+            .orderBy(`${PSHDP_TASK_TABLE}.priority`, "DESC")
+            .addOrderBy(`${PSHDP_TASK_TABLE}.createdAt`, "ASC")
             .take(1)
             .getOne();
     }
@@ -60,7 +61,7 @@ export class TaskRepository extends GenericRepository<Task> {
 
     async countAsync(kindId?: string): Promise<PushDepTaskCount> {
         let queryBuilder = this.repository
-            .createQueryBuilder("task")
+            .createQueryBuilder(PSHDP_TASK_TABLE)
             .select("state")
             .addSelect("COUNT(state)", "count");
         if (kindId) {

@@ -2,13 +2,14 @@ import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreatedAt, DeletedAt, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { Task } from "./Task.model";
 import { KindActivityLock } from "./KindActivityLock.model";
+import { PSHDP_KIND_TABLE } from "../definitions";
 
 @Table({
     timestamps: true,
     paranoid: true,
     underscored: true,
     freezeTableName: true,
-    tableName: "kind",
+    tableName: PSHDP_KIND_TABLE,
     version: "version",
     comment: "A worker will process tasks of a given kind"
 })

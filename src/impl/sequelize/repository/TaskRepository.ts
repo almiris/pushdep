@@ -1,9 +1,9 @@
-import { Repository } from "sequelize-typescript";
 import { FindOptions, Op, Transaction } from "sequelize";
+import { Repository } from "sequelize-typescript";
 import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
+import { PSHDP_TASK_DEPENDENCY_TABLE, PSHDP_TASK_TABLE } from "../definitions";
 import { GenericRepository } from "../helper/GenericRepository";
 import { Task } from "../model/Task.model";
-import { TaskDependency } from "../model/TaskDependency.model";
 
 interface Count { 
     state: number; 
@@ -28,8 +28,8 @@ export class TaskRepository extends GenericRepository<Task> {
                         kindId: kindId,
                         state: PushDepExecutionState.pending
                     },
-                    this.repository.sequelize.literal(`(SELECT COUNT(td.task_id) FROM task_dependency AS td
-                        INNER JOIN task as t ON td.dependency_id = t.id
+                    this.repository.sequelize.literal(`(SELECT COUNT(td.task_id) FROM ${PSHDP_TASK_DEPENDENCY_TABLE} AS td
+                        INNER JOIN ${PSHDP_TASK_TABLE} as t ON td.dependency_id = t.id
                         WHERE td.task_id = "Task".id
                         AND (t.state = ${PushDepExecutionState.pending} OR t.state = ${PushDepExecutionState.active})) = 0`)
                 ]

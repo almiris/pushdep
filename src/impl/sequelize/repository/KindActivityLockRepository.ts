@@ -26,7 +26,7 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
                     [Op.or]: [{
                         lockedAt: null,
                     },
-                    this.repository.sequelize.literal('EXTRACT(EPOCH FROM (NOW() - "KindActivityLock"."locked_at")) > "kind"."lock_timeout_ms" / 1000')
+                    this.repository.sequelize.literal(`EXTRACT(EPOCH FROM (NOW() - "KindActivityLock"."locked_at")) > "kind"."lock_timeout_ms" / 1000`)
                     ]
                 }]
             },
@@ -39,7 +39,7 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
 
     async reserveLockAsync(transaction: Transaction, lockId: number, taskId: string): Promise<number> {
         return (await this.repository.update({ 
-            lockedAt : new Date(),
+            lockedAt: new Date(),
             taskId: taskId
         }, { 
             transaction: transaction,
@@ -64,7 +64,7 @@ export class KindActivityLockRepository extends GenericRepository<KindActivityLo
         });
         if (lock) {
             await this.repository.update({ 
-                lockedAt : null,
+                lockedAt: null,
                 taskId: null
             }, { 
                 transaction: transaction,

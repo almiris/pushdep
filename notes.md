@@ -114,6 +114,9 @@ npm run package
 cd package
 npm publish almiris-pushdep-<version>.tgz
 git tag -a v<version> -m "version <version>"
+git push origin --tags
+or 
+git push origin v<version>
 
 npx jest --runInBand --coverage
 

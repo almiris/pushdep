@@ -2,9 +2,10 @@ import { PushDepKind } from "../../../core/PushDep";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Task } from "./Task.entity";
 import { KindActivityLock } from "./KindActivityLock.entity";
+import { PSHDP_KIND_TABLE } from "../definitions";
 
 @Entity({
-    name: "kind"
+    name: PSHDP_KIND_TABLE
 })
 export class Kind implements PushDepKind {
     @PrimaryColumn({

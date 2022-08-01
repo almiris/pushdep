@@ -1,7 +1,8 @@
 import { Entity, Index, PrimaryColumn } from "typeorm";
+import { PSHDP_TASK_DEPENDENCY_TABLE } from "../definitions";
 
 @Entity({
-    name: "task_dependency",
+    name: PSHDP_TASK_DEPENDENCY_TABLE,
     synchronize: false
 })
 @Index("idx_task_dependency_task_id", [ "taskId" ])

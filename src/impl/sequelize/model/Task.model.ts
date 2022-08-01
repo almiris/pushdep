@@ -1,5 +1,6 @@
 import { BelongsTo, BelongsToMany, Column, CreatedAt, DeletedAt, ForeignKey, HasMany, Model, PrimaryKey, Table, UpdatedAt } from "sequelize-typescript";
 import { PushDepTask } from "../../../core/PushDep";
+import { PSHDP_TASK_TABLE } from "../definitions";
 import { Kind } from "./Kind.model";
 import { KindActivityLock } from "./KindActivityLock.model";
 import { TaskDependency } from "./TaskDependency.model";
@@ -9,7 +10,7 @@ import { TaskDependency } from "./TaskDependency.model";
     paranoid: true,
     underscored: true,
     freezeTableName: true,
-    tableName: "task",
+    tableName: PSHDP_TASK_TABLE,
     createdAt: "createdAt",
     updatedAt: "updatedAt",
     deletedAt: "deletedAt",
@@ -94,7 +95,7 @@ export class Task extends Model implements PushDepTask {
         field: "state",
         type: "int",
         allowNull: false,
-        comment: "State of this execution"
+        comment: "State of the execution"
     })
     state: number;
 

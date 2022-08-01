@@ -1,4 +1,5 @@
 import { BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from "sequelize-typescript";
+import { PSHDP_KIND_ACTIVITY_LOCK_TABLE } from "../definitions";
 import { Kind } from "./Kind.model";
 import { Task } from "./Task.model";
 
@@ -7,7 +8,7 @@ import { Task } from "./Task.model";
     paranoid: false,
     underscored: true,
     freezeTableName: true,
-    tableName: "kind_activity_lock",
+    tableName: PSHDP_KIND_ACTIVITY_LOCK_TABLE,
     comment: "A lock table used to implement kind concurrency",
     indexes: [{
         name: "idx_kind_activity_lock_kind_id",

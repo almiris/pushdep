@@ -70,7 +70,7 @@ export async function beforeAllAsync(pushDepClass) {
             ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
             pool: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!,
             sync: { alter: false, force: false },
-            logging: false,
+            logging: true,
             // logging: (...msg) => console.log(msg), // true,
             // repositoryMode: true,
             models: [SequelizeKind, SequelizeKindActivityLock, SequelizeTask, SequelizeTaskDependency]
