@@ -92,7 +92,7 @@ class SequelizeTaskService {
                 const start = new Date().getTime();
                 task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
                 const stop = new Date().getTime() - start;
-                console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
+                // console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await this.kindActivityLockRepository.reserveLockAsync(transaction, lock.id, task.id);
                     await this.taskRepository.startAsync(transaction, task.id);

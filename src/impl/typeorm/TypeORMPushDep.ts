@@ -91,7 +91,7 @@ class TypeORMTaskService {
                 const start = new Date().getTime();
                 task = await taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(kindId, true);
                 const stop = new Date().getTime() - start;
-                console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
+                // console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await kindActivityLockRepository.reserveLockAsync(lock.id, task.id);
                     await taskRepository.startAsync(task.id);

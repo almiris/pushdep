@@ -90,6 +90,9 @@ a max execution time; if now - last state time > max execution time, then clean(
 - Externalize schema DB creation in a script / migration (per ORM ?) - This would ensure that the DB schema is the same for any (language, ORM) binding
 task_dependency 5.4M => pkey 1.9M
 task 6.4M => pkey 1.2M
+- Task deletion
+- Worker class option, aside worker function
+- Worker watch dog?
 
 ## Notes
 - If a child completes / is canceled / fails, it's the parent responsability to do what it needs to do (complete / cancel / fail)
