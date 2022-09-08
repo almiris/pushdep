@@ -29,6 +29,9 @@ import { TaskDependency } from "./TaskDependency.model";
         name: "idx_task_state",
         fields: ["state"]
     }, {
+        name: "idx_task_start_at",
+        fields: ["start_at"]
+    }, {
         name: "idx_task_created_at",
         fields: ["created_at"]
     }, {
@@ -66,6 +69,14 @@ export class Task extends Model implements PushDepTask {
         comment: "Priority of the task"
     })
     priority: number;
+
+    @Column({
+        field: "start_at",
+        type: "timestamp with time zone",
+        allowNull: false,
+        comment: "Timestamp that tracks when the task can be executed - the task may be executed starting at start_at"
+    })
+    startAt: Date;
 
     @Column({
         field: "tag",

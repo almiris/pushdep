@@ -9,7 +9,7 @@ import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
 
 const sleep = promisify(setTimeout);
 
-xdescribe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
+describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
     beforeAll(async () => /* await */ beforeAllAsync(pushDepClass));
 

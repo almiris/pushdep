@@ -11,8 +11,10 @@ import { KindActivityLock } from "./KindActivityLock.entity";
 @Index("idx_task_tag", [ "tag" ])
 @Index("idx_task_kind_id", [ "kindId" ])
 @Index("idx_task_state", [ "state" ])
+@Index("idx_task_start_at", [ "startAt" ])
 @Index("idx_task_created_at", [ "createdAt" ])
 @Index("idx_task_deleted_at", [ "deletedAt" ])
+@Index("idx_task_state_priority_created_at", { synchronize: false })
 // TypeORM does not allow using ASC or DESC in @Index: https://stackoverflow.com/questions/69850518/typeorm-index-creation => @see migration/MigrateTaskIndexes
 // @Index("idx_task_state_priority_created_at", [ "state ASC", "priority DESC", "created_at ASC" ])
 // @Index("idx_task_state_priority_created_at", [ "state", "priority", "createdAt" ])
@@ -32,6 +34,14 @@ export class Task implements PushDepTask {
         comment: "Priority of the task"
     })
     priority: number;
+
+    @Column({
+        name: "start_at",
+        type: "timestamp with time zone",
+        nullable: false,
+        comment: "Timestamp that tracks when the task can be executed - the task may be executed starting at start_at"
+    })
+    startAt: Date;
 
     @Column({
         name: "tag",

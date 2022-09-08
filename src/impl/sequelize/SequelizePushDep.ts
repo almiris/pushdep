@@ -48,10 +48,12 @@ class SequelizeTaskService {
     async doPushAsync(transaction: Transaction, task: PushDepTask): Promise<Task> {
         const taskEntity = task as Task;
         if (!taskEntity.id) {
+            const now = new Date();
             taskEntity.dependencies = await this.doPushDependenciesAsync(transaction, taskEntity.dependencies);
             taskEntity.priority = taskEntity.priority || 1;
+            taskEntity.startAt = taskEntity.startAt || now;
             taskEntity.state = PushDepExecutionState.pending;
-            taskEntity.createdAt = new Date();
+            taskEntity.createdAt = now;
             const taskModel = await this.taskRepository.createAsync(transaction, taskEntity);
             if (taskEntity.dependencies) {
                 await this.taskDependencyRepository.bulkCreateAsync(transaction, taskEntity.dependencies.map(dependency => ({
@@ -89,9 +91,9 @@ class SequelizeTaskService {
             let task = null;
             const lock = await this.kindActivityLockRepository.acquireLockAsync(transaction, kindId);
             if (lock) {
-                const start = new Date().getTime();
+                // const start = new Date().getTime();
                 task = await this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(transaction, kindId, true);
-                const stop = new Date().getTime() - start;
+                // const stop = new Date().getTime() - start;
                 // console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await this.kindActivityLockRepository.reserveLockAsync(transaction, lock.id, task.id);
@@ -130,7 +132,7 @@ class SequelizeTaskService {
         await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindActivityLockRepository.releaseLockAsync(transaction, task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(transaction, task, PushDepExecutionState.pending);
-            await this.taskRepository.returnAsync(transaction, task.id, task.results);
+            await this.taskRepository.returnAsync(transaction, task.id, task.results, task.startAt);
         });
     }
 

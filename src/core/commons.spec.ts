@@ -46,7 +46,7 @@ export async function beforeAllAsync(pushDepClass) {
             database: process.env.DB_NAME,
             ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
             extra: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!
-            synchronize: true,
+            synchronize: false,
             logging: false, // true,
             entities: [TypeORMKind, TypeORMKindActivityLock, TypeORMTask, TypeORMTaskDependency],
             migrationsTableName: "pshdp_typeorm_migrations",
@@ -70,7 +70,7 @@ export async function beforeAllAsync(pushDepClass) {
             ssl: process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined,
             pool: process.env.DB_EXTRA ? JSON.parse(process.env.DB_EXTRA) : undefined, // pool parameters!,
             sync: { alter: false, force: false },
-            logging: true,
+            logging: false,
             // logging: (...msg) => console.log(msg), // true,
             // repositoryMode: true,
             models: [SequelizeKind, SequelizeKindActivityLock, SequelizeTask, SequelizeTaskDependency]

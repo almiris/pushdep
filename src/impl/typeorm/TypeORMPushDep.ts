@@ -46,10 +46,12 @@ class TypeORMTaskService {
     async doPushAsync(taskRepository: TaskRepository, taskDependencyRepository: TaskDependencyRepository, task: PushDepTask): Promise<Task> {
         const taskEntity = task as Task;
         if (!taskEntity.id) {
+            const now = new Date();
             taskEntity.dependencies = await this.doPushDependenciesAsync(taskRepository, taskDependencyRepository, taskEntity.dependencies);
             taskEntity.priority = task.priority || 1;
+            taskEntity.startAt = taskEntity.startAt || now;
             taskEntity.state = PushDepExecutionState.pending;
-            taskEntity.createdAt = new Date();
+            taskEntity.createdAt = now;
             const createdTaskEntity = await taskRepository.insertAsync(taskEntity);
             if (taskEntity.dependencies) {
                 await taskDependencyRepository.bulkInsertAsync(taskEntity.dependencies.map(dependency => ({
@@ -88,9 +90,9 @@ class TypeORMTaskService {
             let task = null;
             const lock = await kindActivityLockRepository.acquireLockAsync(kindId);
             if (lock) {
-                const start = new Date().getTime();
+                // const start = new Date().getTime();
                 task = await taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(kindId, true);
-                const stop = new Date().getTime() - start;
+                // const stop = new Date().getTime() - start;
                 // console.log("task " + (task ? "found; " : "not found; ") + stop + " ms");
                 if (task) {
                     await kindActivityLockRepository.reserveLockAsync(lock.id, task.id);
@@ -137,7 +139,7 @@ class TypeORMTaskService {
             const taskRepository = new TaskRepository(transactionalEntityManager.getRepository(Task));
             await kindActivityLockRepository.releaseLockAsync(task.kindId, task.id);
             await this.allowTaskExecutionStateTransition(task, PushDepExecutionState.pending);
-            await taskRepository.returnAsync(task.id, task.results);
+            await taskRepository.returnAsync(task.id, task.results, task.startAt);
         });
     }
 

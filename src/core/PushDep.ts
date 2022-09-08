@@ -9,6 +9,7 @@ export interface PushDepTask {
     readonly id?: string;
     kindId: string;
     priority?: number;
+    startAt?: Date;
     tag?: string;
     args?: any; // Must be an object, do not use simple string!
     results?: any; // Must be an object, do not use simple string!
@@ -19,10 +20,12 @@ export interface PushDepTask {
 export const PushDepTaskProperties: PushDepTask = {
     id: null,
     kindId: null,
-    dependencies: null,
-    args: null,
     priority: null,
-    results: null
+    startAt: null,
+    tag: null,
+    args: null,
+    results: null,
+    dependencies: null
 }
 
 export enum PushDepExecutionState {
@@ -45,15 +48,6 @@ export interface PushDepTaskCount {
     canceled: number;
     failed: number;
     all: number;
-}
-
-export interface PushDepTaskExecution {
-    state?: PushDepExecutionState;
-    createdAt?: Date;
-    startedAt?: Date;
-    completedAt?: Date;
-    canceledAt?: Date;
-    failedAt?: Date;
 }
 
 export interface PushDep {

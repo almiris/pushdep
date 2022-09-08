@@ -1,5 +1,15 @@
+import { now } from "sequelize/types/utils";
 import { v4 as uuidv4 } from "uuid";
-import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount, PushDepTaskExecution } from "../../core/PushDep";
+import { AllowedStateTransitions, PushDep, PushDepExecutionState, PushDepKind, PushDepTask, PushDepTaskCount } from "../../core/PushDep";
+
+export interface PushDepTaskExecution {
+    state?: PushDepExecutionState;
+    createdAt?: Date;
+    startedAt?: Date;
+    completedAt?: Date;
+    canceledAt?: Date;
+    failedAt?: Date;
+}
 
 type KindsMappedByKind = Record<string, PushDepKind>;
 
@@ -40,11 +50,13 @@ class InMemoryTaskService {
 
     doPush(task: InMemoryTask): InMemoryTask {
         if (!task.id) {
+            const now = new Date();
             task.id= uuidv4();
             task.dependencies = this.doPushDependencies(task.dependencies as InMemoryTask[]);
             task.priority = task.priority || 1;
+            task.startAt = task.startAt || now;
             task.state = PushDepExecutionState.pending;
-            task.createdAt = new Date();
+            task.createdAt = now;
             this.doPushMappedByTaskKindOrderedByPushTime(task, this.pendingTasks);
             this.allTasks[task.id] = task;
         } 
@@ -112,8 +124,8 @@ class InMemoryTaskService {
         for (const priority of prioritiesDesc) {
             const tasksForPriorityAndKind: InMemoryTask[] = tasks[priority][kindId];
             if (tasksForPriorityAndKind) {
-                const index = tasksForPriorityAndKind.findIndex((task: InMemoryTask) => !task.dependencies 
-                || task.dependencies.every(t => !this.allTasks[t.id] || (this.allTasks[t.id].state !== PushDepExecutionState.pending && this.allTasks[t.id].state !== PushDepExecutionState.active)));
+                const index = tasksForPriorityAndKind.findIndex((task: InMemoryTask) => task.startAt.getTime() <= new Date().getTime() 
+                && (!task.dependencies || task.dependencies.every(t => !this.allTasks[t.id] || (this.allTasks[t.id].state !== PushDepExecutionState.pending && this.allTasks[t.id].state !== PushDepExecutionState.active))));
                 if (index !== -1) {
                     const task = tasksForPriorityAndKind[index];
                     if (pop) {
@@ -167,6 +179,7 @@ class InMemoryTaskService {
         t.state = state;
         switch (state) {
             case PushDepExecutionState.pending: 
+                t.startAt = task.startAt || new Date();
                 t.startedAt = null;
                 t.completedAt = null;
                 t.canceledAt = null;

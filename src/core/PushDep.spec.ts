@@ -2,7 +2,9 @@
 // npx jest --testPathPattern PushDep.spec --pushDepClass=TypeORMPushDep
 // npx jest --testPathPattern PushDep.spec --pushDepClass=SequelizePushDep
 import "dotenv/config";
+import { promisify } from "util";
 import { afterAllAsync, beforeAllAsync, beforeEachAsync, pushDep, TESTED_PUSHDEPS } from "./commons.spec";
+const sleep = promisify(setTimeout);
 
 describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
@@ -186,8 +188,8 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
             all: 1
         });
 
-        console.log(task);
-        console.log("kind", task.kindId);
+        // console.log(task);
+        // console.log("kind", task.kindId);
         await pushDep.completeAsync(task);
 
         count = await pushDep.countAsync("a");
@@ -297,6 +299,72 @@ describe.each(TESTED_PUSHDEPS)('PushDep tests using $pushDepClass pushDep', ({ p
         });
 
         expect.assertions(2);
+    });
+
+    it('It should start a task only when the task is ready to start', async () => {
+        const task0 = await pushDep.pushAsync({ kindId: "a", startAt: new Date() });
+        
+        let task = await pushDep.startAsync("a");
+        expect(task.id).toBe(task0.id);
+
+        const task1 = await pushDep.pushAsync({ kindId: "a", startAt: new Date(new Date().getTime() + 1000) });
+        
+        task = await pushDep.startAsync("a");
+        expect(task).toBeNull();
+
+        await sleep(500);
+        task = await pushDep.startAsync("a");
+        expect(task).toBeNull();
+
+        await sleep(500);
+        task = await pushDep.startAsync("a");
+        expect(task.id).toBe(task1.id);
+
+        expect.assertions(4);
+    });
+
+    it('It should start a task, return it and restart it later', async () => {
+        const task0 = await pushDep.pushAsync({
+            kindId: "a"
+        });
+
+        let task = await pushDep.startAsync("a");
+
+        let count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 0,
+            active: 1,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        task.startAt = new Date(new Date().getTime() + 1000);
+        await pushDep.returnAsync(task);
+
+        count = await pushDep.countAsync("a");
+        expect(count).toEqual({
+            pending: 1,
+            active: 0,
+            completed: 0,
+            canceled: 0,
+            failed: 0,
+            all: 1
+        });
+
+        task = await pushDep.startAsync("a");
+        expect(task).toBeNull();
+
+        await sleep(500);
+        task = await pushDep.startAsync("a");
+        expect(task).toBeNull();
+
+        await sleep(500);
+        task = await pushDep.startAsync("a");
+        expect(task.id).toBe(task0.id);
+
+        expect.assertions(5);
     });
 
     it('It should get task dependencies', async () => {

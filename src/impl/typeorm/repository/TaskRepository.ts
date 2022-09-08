@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { LessThanOrEqual, Repository } from "typeorm";
 import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
 import { PSHDP_TASK_DEPENDENCY_TABLE, PSHDP_TASK_TABLE } from "../definitions";
 import { Task } from "../entity/Task.entity";
@@ -21,7 +21,8 @@ export class TaskRepository extends GenericRepository<Task> {
         }
         return /* await */ queryBuilder.where({ 
                 kindId: kindId, 
-                state: PushDepExecutionState.pending 
+                state: PushDepExecutionState.pending,
+                startAt: LessThanOrEqual(new Date())
             })
             .andWhere((qb) => {
                 return `${qb
@@ -117,9 +118,10 @@ export class TaskRepository extends GenericRepository<Task> {
         })).affected === 1;
     }
 
-    async returnAsync(taskId: string, taskResults: any): Promise<boolean> {
+    async returnAsync(taskId: string, taskResults: any, startAt: Date): Promise<boolean> {
         return (await this.repository.update({ id: taskId }, { 
             state: PushDepExecutionState.pending, 
+            startAt: startAt || new Date(),
             startedAt: null,
             completedAt: null,
             canceledAt: null,

@@ -26,7 +26,8 @@ export class TaskRepository extends GenericRepository<Task> {
             where: {
                 [Op.and]: [{
                         kindId: kindId,
-                        state: PushDepExecutionState.pending
+                        state: PushDepExecutionState.pending,
+                        startAt: {[Op.lte] : new Date()}
                     },
                     this.repository.sequelize.literal(`(SELECT COUNT(td.task_id) FROM ${PSHDP_TASK_DEPENDENCY_TABLE} AS td
                         INNER JOIN ${PSHDP_TASK_TABLE} as t ON td.dependency_id = t.id
@@ -129,9 +130,10 @@ export class TaskRepository extends GenericRepository<Task> {
         }))[0] === 1;
     }
 
-    async returnAsync(transaction: Transaction, taskId: string, taskResults: any): Promise<boolean> {
+    async returnAsync(transaction: Transaction, taskId: string, taskResults: any, startAt: Date): Promise<boolean> {
         return (await this.updateAsync(transaction, {
             state: PushDepExecutionState.pending, 
+            startAt: startAt || new Date(),
             startedAt: null,
             completedAt: null,
             canceledAt: null,
