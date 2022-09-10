@@ -43,14 +43,14 @@ export class TaskRepository extends GenericRepository<Task> {
         });
     }
 
-    async countActiveTasks(transaction: Transaction, kindId: string): Promise<number> {
-        return /* await */ this.repository.count({
+    async hasTaskInStatesAsync(transaction: Transaction | null, kindId: string, states: PushDepExecutionState[]): Promise<boolean> {
+        return await this.repository.count({
             transaction: transaction,
             where: {
                 kindId: kindId,
-                state: PushDepExecutionState.active
+                state: { [Op.or]: states }
             }
-        });
+        }) > 0;
     }
 
     async findByTaskIdAsync(transaction: Transaction, taskId: string): Promise<Task> {

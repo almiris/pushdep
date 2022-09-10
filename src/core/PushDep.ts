@@ -56,6 +56,7 @@ export interface PushDep {
     pushAsync(task: PushDepTask): Promise<PushDepTask>;
     countAsync(kindId?: string): Promise<PushDepTaskCount>;
     peekAsync(kindId: string): Promise<PushDepTask>;
+    hasPendingOrActiveAsync(kindId: string): Promise<boolean>;
     startAsync(kindId: string): Promise<PushDepTask>;
     completeAsync(task: PushDepTask): Promise<void>;
     cancelAsync(task: PushDepTask): Promise<void>;

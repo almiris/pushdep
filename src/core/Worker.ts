@@ -4,19 +4,30 @@ import { v4 as uuidv4 } from "uuid";
 
 const sleep = promisify(setTimeout);
 
-export class PushDepWorkerOptions {
-    kindId: string;
-    idleTimeoutMs = 200;
+export const enum PushDepWorkerRunningMode {
+    always,
+    stop,
+    wait
 }
 
-export type PushDepWorkerFunction = (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => Promise<void>;
+const DEFAULT_IDLE_TIMEOUT_MS = 1000;
+
+const DEFAULT_WAIT_FOR_TERMINATION_SLEEP_MS = 10;
+
+export class PushDepWorkerOptions {
+    kindId: string;
+    idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS;
+    runningMode? = PushDepWorkerRunningMode.always;
+}
+
+export type PushDepWorkerDelegateFunction = (worker: PushDepWorker, task: PushDepTask, pushDep: PushDep) => Promise<void>;
 
 export class PushDepWorker {
     isRunning = false;
     isTerminated = true;
     id = uuidv4();
 
-    constructor(private pushDep: PushDep, private options: PushDepWorkerOptions, private worker: PushDepWorkerFunction) {}
+    constructor(private pushDep: PushDep, private options: PushDepWorkerOptions, private workerDelegate?: PushDepWorkerDelegateFunction) {}
 
     async startAsync(): Promise<void> {
         if (!this.isRunning) {
@@ -24,15 +35,26 @@ export class PushDepWorker {
             this.isTerminated = false;
             while (this.isRunning) {
                 const task = await this.pushDep.startAsync(this.options.kindId);
-                if (!task) {
-                    await sleep(this.options.idleTimeoutMs);
-                }
-                else {
-                    await this.worker(this, task, this.pushDep);
-                }
+                await (task ? this.onTask(task) : this.onTaskNotFound());
             }
             this.isTerminated = true;
         }
+    }
+
+    async onTask(task: PushDepTask): Promise<void> {
+        if (this.workerDelegate) {
+            await this.workerDelegate(this, task, this.pushDep);
+        }
+    }
+
+    async onTaskNotFound(): Promise<void> {
+        const runningMode = this.options.runningMode || PushDepWorkerRunningMode.always;
+        if (runningMode === PushDepWorkerRunningMode.always 
+            || (runningMode === PushDepWorkerRunningMode.wait && !!await this.pushDep.hasPendingOrActiveAsync(this.options.kindId))) {
+            await sleep(this.options.idleTimeoutMs || DEFAULT_IDLE_TIMEOUT_MS);
+        } else {
+            await this.stopAsync();
+        }                
     }
 
     async stopAsync(): Promise<void> {
@@ -41,7 +63,7 @@ export class PushDepWorker {
 
     async waitForTerminationAsync(): Promise<void> {
         while (!this.isTerminated) {
-            await sleep(10);
+            await sleep(DEFAULT_WAIT_FOR_TERMINATION_SLEEP_MS);
         }
     }
 }

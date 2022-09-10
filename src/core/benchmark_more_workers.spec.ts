@@ -36,7 +36,7 @@ xdescribe('Worker tests using $pushDepClass pushDep', () => {
 
         const pushDep = new SequelizePushDep(sequelize);
         const kindId = "a";
-        const consoleWorkerFunction = async (_worker: PushDepWorker, task: PushDepTask, _pushDep: PushDep) => {
+        const consoleWorkerDelegateFunction = async (_worker: PushDepWorker, task: PushDepTask, _pushDep: PushDep) => {
             try {
                 await sleep(5000);
                 await pushDep.completeAsync(task);
@@ -53,7 +53,7 @@ xdescribe('Worker tests using $pushDepClass pushDep', () => {
 
         const numberOfWorkers = 10;
         new Array(numberOfWorkers).fill(0).forEach(_ => {
-            const worker = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerFunction);
+            const worker = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerDelegateFunction);
             worker.startAsync();
         });
 

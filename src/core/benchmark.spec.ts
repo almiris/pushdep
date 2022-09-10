@@ -9,7 +9,7 @@ import { PushDepWorker, PushDepWorkerOptions } from "./Worker";
 
 const sleep = promisify(setTimeout);
 
-describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
+xdescribe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pushDepClass }) => {
 
     beforeAll(async () => /* await */ beforeAllAsync(pushDepClass));
 
@@ -27,7 +27,7 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
         const kindIdC = "c";
         let totalNumberOfTasks = numberOfRootTasks * (1 + 5 + 5 * 5); // 1 root, 5 deps per root, 5 deps per dep
         let numberOfRemainingTasks = totalNumberOfTasks;
-        const consoleWorkerFunction = async (_worker: PushDepWorker, task: PushDepTask, _pushDep: PushDep) => {
+        const consoleWorkerDelegateFunction = async (_worker: PushDepWorker, task: PushDepTask, _pushDep: PushDep) => {
             try {
                 await sleep(100);
                 await pushDep.completeAsync(task);
@@ -72,15 +72,15 @@ describe.each(TESTED_PUSHDEPS)('Worker tests using $pushDepClass pushDep', ({ pu
 
         const workers: PushDepWorker[] = [
             ...new Array(numberOfWorkers).fill(0).map(_ => {
-                const worker = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerFunction);
+                const worker = new PushDepWorker(pushDep, workerOptionsA, consoleWorkerDelegateFunction);
                 worker.startAsync();
                 return worker;
             }), ...new Array(numberOfWorkers).fill(0).map(_ => {
-                const worker = new PushDepWorker(pushDep, workerOptionsB, consoleWorkerFunction);
+                const worker = new PushDepWorker(pushDep, workerOptionsB, consoleWorkerDelegateFunction);
                 worker.startAsync();
                 return worker;
             }), ...new Array(numberOfWorkers).fill(0).map(_ => {
-                const worker = new PushDepWorker(pushDep, workerOptionsC, consoleWorkerFunction);
+                const worker = new PushDepWorker(pushDep, workerOptionsC, consoleWorkerDelegateFunction);
                 worker.startAsync();
                 return worker;
             })];

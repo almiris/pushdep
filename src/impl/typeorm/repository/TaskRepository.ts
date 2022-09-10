@@ -1,4 +1,4 @@
-import { LessThanOrEqual, Repository } from "typeorm";
+import { In, LessThanOrEqual, Repository } from "typeorm";
 import { PushDepExecutionState, PushDepTaskCount } from "../../../core/PushDep";
 import { PSHDP_TASK_DEPENDENCY_TABLE, PSHDP_TASK_TABLE } from "../definitions";
 import { Task } from "../entity/Task.entity";
@@ -43,13 +43,13 @@ export class TaskRepository extends GenericRepository<Task> {
             .getOne();
     }
 
-    async countActiveTasks(kindId: string): Promise<number> {
-        return /* await */ this.repository.count({
+    async hasTaskInStatesAsync(kindId: string, states: PushDepExecutionState[]): Promise<boolean> {
+        return await this.repository.count({
             where: {
                 kindId: kindId,
-                state: PushDepExecutionState.active
+                state: In(states)
             }
-        });
+        }) > 0;
     }
 
     async findByTaskIdAsync(id: string): Promise<Task> {

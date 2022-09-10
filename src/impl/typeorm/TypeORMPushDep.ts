@@ -83,6 +83,10 @@ class TypeORMTaskService {
         return /* await */ this.taskRepository.findPendingTaskWithHighestPriorityAndNoPendingOrActiveDependencyAsync(kindId);
     }
 
+    async hasPendingOrActiveAsync(kindId: string): Promise<boolean> {
+        return /* await */ this.taskRepository.hasTaskInStatesAsync(kindId, [PushDepExecutionState.pending, PushDepExecutionState.active]);
+    }
+
     async startAsync(kindId: string): Promise<PushDepTask> {
         return /* await */ this.dataSource.transaction<Task>("READ COMMITTED", async (transactionalEntityManager: EntityManager): Promise<Task> => {
             const kindActivityLockRepository = new KindActivityLockRepository(transactionalEntityManager.getRepository(KindActivityLock));
@@ -183,6 +187,10 @@ export class TypeORMPushDep implements PushDep {
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
         return /* await */ this.taskService.peekAsync(kindId);
+    }
+
+    async hasPendingOrActiveAsync(kindId: string): Promise<boolean> {
+        return /*await */ this.taskService.hasPendingOrActiveAsync(kindId);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {

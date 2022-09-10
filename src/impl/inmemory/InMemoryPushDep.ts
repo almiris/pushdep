@@ -138,6 +138,23 @@ class InMemoryTaskService {
         return null;
     }
 
+    hasTaskInStates(kindId: string, states: PushDepExecutionState[]): boolean {
+        return states.reduce((count, state) => {
+            switch (state) {
+                case PushDepExecutionState.pending: 
+                    return count + this.countMappedByTaskKindOrderedByPushTime(kindId, this.pendingTasks); 
+                case PushDepExecutionState.active: 
+                    return count + this.countMappedByTaskKindMappedByTaskId(kindId, this.activeTasks);
+                case PushDepExecutionState.completed: 
+                    return count + this.countMappedByTaskKindMappedByTaskId(kindId, this.completedTasks);
+                case PushDepExecutionState.canceled: 
+                    return count + this.countMappedByTaskKindMappedByTaskId(kindId, this.canceledTasks);
+                case PushDepExecutionState.failed: 
+                    return count + this.countMappedByTaskKindMappedByTaskId(kindId, this.failedTasks);
+            }
+        }, 0) > 0;
+    }
+
     start(kindId: string): PushDepTask {
         const concurrency = this.kinds[kindId]?.concurrency;
         let task: PushDepTask = null;
@@ -247,6 +264,10 @@ export class InMemoryPushDep implements PushDep {
 
     async peekAsync(kindId: string): Promise<PushDepTask> {
         return this.taskService.peek(kindId);
+    }
+
+    async hasPendingOrActiveAsync(kindId: string): Promise<boolean> {
+        return this.taskService.hasTaskInStates(kindId, [PushDepExecutionState.pending, PushDepExecutionState.active]);
     }
 
     async startAsync(kindId: string): Promise<PushDepTask> {
