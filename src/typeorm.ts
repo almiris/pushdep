@@ -1,1 +1,1 @@
-export * from "./impl/typeorm/TypeORMPushDep";
+export * from "./impl/typeorm";

@@ -1,6 +1,6 @@
 {
    "name": "@almiris/pushdep",
-   "version": "1.3.0",
+   "version": "1.3.1",
    "description": "A concurrent executor for hierarchical tasks (tasks that *depend* on other tasks). It can also be used as a message queue, a workflow engine or a process manager.",
    "main": "index.js",
    "types": "index.d.ts",

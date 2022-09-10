@@ -1,1 +1,1 @@
-export * from "./impl/sequelize/SequelizePushDep";
+export * from "./impl/sequelize";

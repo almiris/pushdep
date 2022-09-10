@@ -1,1 +1,1 @@
-export * from "./impl/inmemory/InMemoryPushDep";
+export * from "./impl/inmemory";
