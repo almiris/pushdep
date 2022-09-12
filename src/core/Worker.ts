@@ -35,22 +35,22 @@ export class PushDepWorker {
             this.isTerminated = false;
             while (this.isRunning) {
                 const task = await this.pushDep.startAsync(this.options.kindId);
-                await (task ? this.onTask(task) : this.onTaskNotFound());
+                await (task ? this.onTaskAsync(this.pushDep, task) : this.onTaskNotFoundAsync(this.pushDep));
             }
             this.isTerminated = true;
         }
     }
 
-    async onTask(task: PushDepTask): Promise<void> {
+    async onTaskAsync(pushDep: PushDep, task: PushDepTask): Promise<void> {
         if (this.workerDelegate) {
-            await this.workerDelegate(this, task, this.pushDep);
+            await this.workerDelegate(this, task, pushDep);
         }
     }
 
-    async onTaskNotFound(): Promise<void> {
+    async onTaskNotFoundAsync(pushDep: PushDep): Promise<void> {
         const runningMode = this.options.runningMode || PushDepWorkerRunningMode.always;
         if (runningMode === PushDepWorkerRunningMode.always 
-            || (runningMode === PushDepWorkerRunningMode.wait && !!await this.pushDep.hasPendingOrActiveAsync(this.options.kindId))) {
+            || (runningMode === PushDepWorkerRunningMode.wait && !!await pushDep.hasPendingOrActiveAsync(this.options.kindId))) {
             await sleep(this.options.idleTimeoutMs || DEFAULT_IDLE_TIMEOUT_MS);
         } else {
             await this.stopAsync();
