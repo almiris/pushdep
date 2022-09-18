@@ -26,7 +26,7 @@ class SequelizeTaskService {
     }
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE}, async (transaction: Transaction): Promise<void> => {
+        await this.sequelize.transaction<void>({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED}, async (transaction: Transaction): Promise<void> => {
             await this.kindRepository.upsertAsync(transaction, kind as Kind);
             await this.kindActivityLockRepository.deleteAllAsync(transaction, kind.id);
             for (let i = 0; i < kind.concurrency; i++) {

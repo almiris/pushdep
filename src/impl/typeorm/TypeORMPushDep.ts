@@ -20,7 +20,7 @@ class TypeORMTaskService {
     }
     
     async setKindAsync(kind: PushDepKind): Promise<void> {
-        await this.dataSource.transaction<void>("SERIALIZABLE", async (transactionalEntityManager: EntityManager): Promise<void> => {
+        await this.dataSource.transaction<void>("READ COMMITTED", async (transactionalEntityManager: EntityManager): Promise<void> => {
             const kindRepository = new KindRepository(transactionalEntityManager.getRepository(Kind));
             const kindActivityLockRepository = new KindActivityLockRepository(transactionalEntityManager.getRepository(KindActivityLock));
             await kindRepository.saveAsync(kind);
