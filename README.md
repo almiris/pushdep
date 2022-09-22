@@ -1,11 +1,4 @@
 # PushDep
-```mermaid
-graph TD
-    A[Hard] -->|Text| B(Round)
-    B --> C{Decision}
-    C -->|One| D[Result 1]
-    C -->|Two| E[Result 2]
-```
 *PushDep* is a concurrent executor for hierarchical tasks (tasks that *depend* on other tasks). It can also be used as a message queue, a workflow engine or a process manager.
 
 It has a learning curve of 5 minutes and is up and runnning as soon as you *npm-installed* it in your project.
