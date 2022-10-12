@@ -39,8 +39,7 @@ export class PushDepWorker {
                     await (task ? this.onTaskAsync(this.pushDep, task) : this.onTaskNotFoundAsync(this.pushDep));
                 }
                 catch (err) {
-                    // TODO add a log callback
-                    await this.onTaskNotFoundAsync(this.pushDep);
+                    await this.onErrorAsync(this.pushDep, err);
                 }
             }
             this.isTerminated = true;
@@ -60,7 +59,11 @@ export class PushDepWorker {
             await sleep(this.options.idleTimeoutMs || DEFAULT_IDLE_TIMEOUT_MS);
         } else {
             await this.stopAsync();
-        }                
+        }
+    }
+
+    async onErrorAsync(pushDep: PushDep, err: any): Promise<void> {
+        await sleep(this.options.idleTimeoutMs || DEFAULT_IDLE_TIMEOUT_MS);
     }
 
     async stopAsync(): Promise<void> {
