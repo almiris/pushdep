@@ -34,8 +34,14 @@ export class PushDepWorker {
             this.isRunning = true;
             this.isTerminated = false;
             while (this.isRunning) {
-                const task = await this.pushDep.startAsync(this.options.kindId);
-                await (task ? this.onTaskAsync(this.pushDep, task) : this.onTaskNotFoundAsync(this.pushDep));
+                try {
+                    const task = await this.pushDep.startAsync(this.options.kindId);
+                    await (task ? this.onTaskAsync(this.pushDep, task) : this.onTaskNotFoundAsync(this.pushDep));
+                }
+                catch (err) {
+                    // TODO add a log callback
+                    await this.onTaskNotFoundAsync(this.pushDep);
+                }
             }
             this.isTerminated = true;
         }
